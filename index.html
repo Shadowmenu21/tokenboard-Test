@@ -170,6 +170,9 @@ textarea{min-height:56px;resize:vertical}
 .switch[aria-checked="true"] .knob::after{transform:translateX(16px);background:var(--brass-ink)}
 .switch span:last-child{display:grid;min-width:0}
 .switch b{font-size:14px;line-height:1.2}
+.switch.mini{flex:none;padding:5px 9px;gap:7px}.switch.mini b{font-size:13px}
+.arr select{flex:1 1 auto;width:0;text-overflow:ellipsis}.toolbar>.ghost{flex:none}
+.arr>.sec{display:none}.toolbar .sm{display:none}@media (max-width:440px){.toolbar .lg{display:none}.toolbar .sm{display:inline}}@media (max-width:400px){.toolbar>.ghost{padding-left:9px;padding-right:9px}.switch.mini{padding:5px 7px}}
 .switch small{font-size:11.5px;color:var(--muted)}
 @media (max-width:380px){.mod.sw2{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){.switch .knob,.switch .knob::after{transition:none}}
@@ -313,7 +316,7 @@ let uid=1;const nid=()=>"t"+(Date.now().toString(36))+(uid++);
 /* the parts of a token that define its type (no counts) */
 const typeOf=t=>({name:t.name,p:t.p,t:t.t,col:t.col,text:t.text,art:t.art,creature:t.creature,kw:{...t.kw},bP:t.bP||0,bT:t.bT||0,ench:!!t.ench,emblem:!!t.emblem,...(t.img?{img:t.img}:{}),...(t.frame?{frame:t.frame}:{})});
 const newTok=def=>({...typeOf(def),id:nid(),stacks:[]});
-const fresh=start=>({defAtk:false,tough:false,tokens:[],aP:0,aT:0,eP:0,eT:0,dbl:0,life:start,start,lastAtk:null,log:[],turn:{e:0,d:0,s:0},example:false});
+const fresh=start=>({defAtk:false,haste:false,tough:false,tokens:[],aP:0,aT:0,eP:0,eT:0,dbl:0,life:start,start,lastAtk:null,log:[],turn:{e:0,d:0,s:0},example:false});
 function example(){
   const P=n=>newTok(PRESETS.find(p=>p.name===n));
   const s=P("Soldier"); s.stacks=[{n:4,tapped:false,sick:false,c:0},{n:3,tapped:true,sick:false,c:0},{n:2,tapped:false,sick:true,c:0},{n:2,tapped:false,sick:false,c:1}];
@@ -322,7 +325,7 @@ function example(){
   return{...fresh(20),tokens:[s,g,tr],aP:1,aT:1,example:true};
 }
 function norm(o){
-  o.defAtk??=false;o.tough??=false;o.eP??=0;o.eT??=0;o.dbl??=0;o.aP??=0;o.aT??=0;o.start??=20;o.life??=o.start;o.log??=[];o.lastAtk??=null;o.turn??={e:0,d:0,s:0};
+  o.defAtk??=false;o.haste??=false;o.tough??=false;o.eP??=0;o.eT??=0;o.dbl??=0;o.aP??=0;o.aT??=0;o.start??=20;o.life??=o.start;o.log??=[];o.lastAtk??=null;o.turn??={e:0,d:0,s:0};
   o.tokens.forEach(t=>{t.ench??=false;t.emblem??=false;t.kw??=kwFrom(t.text);t.bP??=0;t.bT??=0;t.stacks??=[];t.id??=nid()});
   return o;
 }
@@ -438,7 +441,7 @@ function atkDamage(A){if(!A)return 0;if(!A.att)return A.p;
   return A.att.reduce((a,g,i)=>{const b=A.bl?.[i]||0;return a+(g.k-b)*g.p+b*throughEach(A,i)},0)+(A.x||0)}
 const blockedN=A=>A?.att?A.att.reduce((a,g,i)=>a+(A.bl?.[i]||0),0):0;
 function sac(t,stack,n){if(!stack||n<=0)return 0;n=Math.min(n,stack.n);stack.n-=n;merge(t);S.turn.s+=n;if(t.creature)S.turn.d+=n;return n}
-function create(t,n,ec=0){const k=t.emblem?n:n*mult();t.stacks.push({n:k,tapped:false,sick:t.creature,c:t.creature?ec:0,d:0,dt:false,mp:0,mt:0});merge(t);S.example=false;if(!t.emblem)S.turn.e+=k;
+function create(t,n,ec=0){const k=t.emblem?n:n*mult();t.stacks.push({n:k,tapped:false,sick:t.creature&&!S.haste,c:t.creature?ec:0,d:0,dt:false,mp:0,mt:0});merge(t);S.example=false;if(!t.emblem)S.turn.e+=k;
   if(t.emblem){logAdd("mk"+t.id,k,"Gained",t.name+" emblem");return}
   if(ec&&t.creature)log(`Made ${k} ${t.name} with ${ec} +1/+1 counter${ec>1?"s":""} each`);else logAdd("mk"+t.id,k,"Made",t.name)}
 /* state-based actions: 0 toughness, or lethal damage marked */
@@ -540,7 +543,8 @@ function render(){
   ${last?`<button class="lastlog" data-a="logsheet"><span>${esc(last.m)}</span><em>Log</em></button>`:""}
   <div class="toolbar">
     <label class="arr"><span class="sec">Show</span><select id="arr" aria-label="Arrange tokens">${Object.entries(ARR).map(([k,v])=>`<option value="${k}"${UI.arr===k?" selected":""}>${v}</option>`).join("")}</select></label>
-    ${S.tokens.length>1?`<button class="ghost${arranging?" on":""}" data-a="arrange" ${UI.arr==="name"?"disabled":""}>${arranging?"Done arranging":"Rearrange"}</button>`:""}
+    <button class="switch mini" data-a="flag" data-k="haste" role="switch" aria-checked="${S.haste}" aria-label="New creatures enter with haste"><span class="knob"></span><span><b>Haste</b></span></button>
+    ${S.tokens.length>1?`<button class="ghost${arranging?" on":""}" data-a="arrange" ${UI.arr==="name"?"disabled":""}><span class="lg">${arranging?"Done arranging":"Rearrange"}</span><span class="sm">${arranging?"Done":"Move"}</span></button>`:""}
   </div>
   ${arranging?`<div class="note">Use the arrows to move tokens. ${UI.arr==="type"||UI.arr==="color"?"Tokens move within their group.":""}</div>`:""}
   <div class="grid">
@@ -965,7 +969,7 @@ function act(ds,held){
     case"impall":IMP.found.forEach((_,i)=>IMP.pick[i]=true);break;
     case"impnone":IMP.pick={};break;
     case"lifesheet":sheet={kind:"life"};break;
-    case"flag":S[ds.k]=!S[ds.k];log(`${ds.k==="tough"?"Combat damage uses toughness":"Defenders can attack"}: ${S[ds.k]?"on":"off"}`);break;
+    case"flag":S[ds.k]=!S[ds.k];log(`${ds.k==="tough"?"Combat damage uses toughness":ds.k==="haste"?"New creatures enter with haste":"Defenders can attack"}: ${S[ds.k]?"on":"off"}`);break;
     case"grp":UI.collapsed[ds.k]=!UI.collapsed[ds.k];saveUI();break;
     case"buffs":UI.buffs=!UI.buffs;saveUI();break;
     case"sect":UI.open[ds.k]=!UI.open[ds.k];saveUI();break;
