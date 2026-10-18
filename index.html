@@ -1,0 +1,1109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#11241d">
+<meta name="description" content="Magic: The Gathering token tracker">
+<title>Token Board TEST</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: playmat felt, header controls, 2-up grid of token cards, sheet for details, fixed turn bar */
+:root{
+  --felt:#11241d; --felt-2:#183128; --felt-3:#21402f; --line:#2d4c3e;
+  --ink:#eee8d8; --muted:#9db3a7; --brass:#d6ab52; --brass-ink:#1e1608; --danger:#e3795c;
+  --parch:#f2ecdc; --card-ink:#1c1a16;
+  --c-ready:#a9dcbc; --c-tap:#e2c47e; --c-sick:#aec4e2; --c-ctr:#dcb2ea;
+  --f-display:"Cinzel",Georgia,"Times New Roman",serif;
+  --f-ui:"Barlow Semi Condensed","Arial Narrow",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0}
+[hidden]{display:none!important}
+img{max-width:100%}
+:root{padding-top:env(safe-area-inset-top,0px)}
+html,body{background:var(--felt);color:var(--ink)}
+body{font-family:var(--f-ui);font-size:16px;line-height:1.35;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:12px 110px;
+  background:radial-gradient(120% 80% at 50% 0%,var(--felt-2),var(--felt) 70%) fixed;}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.wrap{max-width:760px;margin:0 auto;display:grid;gap:14px}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--f-display);font-size:22px;margin:0;letter-spacing:.04em;color:var(--brass)}
+.ghost{background:none;border:1px solid var(--line);border-radius:8px;padding:6px 12px;color:var(--muted);font-size:14px}
+.ghost.warn{border-color:var(--danger);color:var(--danger)}
+.note{font-size:13px;color:var(--muted)}
+
+/* global modifiers */
+.mods{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.mod{background:var(--felt-2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:grid;gap:4px;min-width:0}
+.mod label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.step{display:flex;align-items:center;justify-content:space-between;gap:4px}
+.step button{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--felt-3);font-size:18px;line-height:1}
+.step output{font-weight:700;font-size:18px;font-variant-numeric:tabular-nums;min-width:0;text-align:center}
+.step output.on{color:var(--brass)}
+
+/* summary */
+.sum{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.sum div{padding:8px 6px;text-align:center;background:var(--felt-2);border-right:1px solid var(--line)}
+.sum div:last-child{border-right:0}
+.sum b{display:block;font-size:24px;font-variant-numeric:tabular-nums;line-height:1.1}
+.sum span{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.sum .hot b{color:var(--brass)}
+.atk{background:var(--brass);color:var(--brass-ink);border-radius:10px;padding:10px 14px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.atk b{font-size:22px;font-variant-numeric:tabular-nums}
+
+/* grid of cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+@media (max-width:380px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
+.slot{display:grid;gap:6px;min-width:0}
+.card{position:relative;aspect-ratio:63/88;max-width:100%;border-radius:4.5%/3.2%;background:#151515;padding:5%;border:0;text-align:left;width:100%;
+  box-shadow:0 6px 16px rgba(0,0,0,.45);display:flex}
+.frame{flex:1;border-radius:3%;background:var(--fr);display:grid;grid-template-rows:auto 1fr auto auto;gap:3%;padding:4%;min-height:0;color:var(--card-ink)}
+.nm{background:var(--parch);border-radius:5px;padding:3px 6px;font-family:var(--f-display);font-weight:700;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
+.art{border-radius:2px;background:var(--art);display:grid;place-items:center;box-shadow:inset 0 0 0 1px rgba(0,0,0,.35);min-height:0;position:relative;overflow:hidden}
+.art .ct{font-family:var(--f-display);font-weight:700;font-size:44px;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.55);font-variant-numeric:tabular-nums}
+.art .ct small{font-size:.5em;opacity:.85}
+.tl{background:var(--parch);border-radius:5px;padding:2px 6px;font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
+.tx{background:var(--parch);border-radius:2px;padding:4px 6px 14px;font-size:11px;min-height:34px;opacity:.97}
+.tx i{opacity:.55}
+.pt{position:absolute;right:6%;bottom:3.5%;background:var(--parch);border:2px solid #151515;border-radius:6px;padding:1px 7px;font-weight:700;font-size:15px;color:var(--card-ink);font-variant-numeric:tabular-nums}
+.pt.buffed{background:#fbe6a8}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{font-size:12px;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted);font-variant-numeric:tabular-nums}
+.chip.ready{color:var(--c-ready);border-color:color-mix(in srgb,var(--c-ready) 50%,transparent)}
+.chip.tap{color:var(--c-tap);border-color:color-mix(in srgb,var(--c-tap) 50%,transparent)}
+.chip.sick{color:var(--c-sick);border-color:color-mix(in srgb,var(--c-sick) 50%,transparent)}
+.chip.ctr{color:var(--c-ctr);border-color:color-mix(in srgb,var(--c-ctr) 50%,transparent)}
+.quick{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.quick button{height:38px;border-radius:8px;border:1px solid var(--line);background:var(--felt-2);font-weight:600;font-size:15px}
+.quick .mk{background:var(--felt-3)}
+.add{border:1.5px dashed var(--line);border-radius:12px;background:none;color:var(--muted);aspect-ratio:63/88;display:grid;place-items:center;font-size:15px;font-weight:600}
+.add span{font-size:36px;display:block;line-height:1;color:var(--brass)}
+
+/* turn bar */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:color-mix(in srgb,var(--felt) 94%,transparent);border-top:1px solid var(--line);backdrop-filter:blur(6px);
+  padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.bar .in{max-width:760px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{height:48px;border-radius:10px;border:1px solid var(--line);background:var(--felt-3);font-weight:700;font-size:16px}
+.btn.pri{background:var(--brass);border-color:var(--brass);color:var(--brass-ink)}
+.btn:disabled{opacity:.4;cursor:default}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:30}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:31;max-height:88%;overflow:auto;background:var(--felt-2);border-top:1px solid var(--line);border-radius:16px 16px 0 0;
+  padding:16px max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.sheet .in{max-width:620px;margin:0 auto;display:grid;gap:14px}
+.sh{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.sh h2{font-family:var(--f-display);font-size:19px;margin:0;color:var(--brass);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sec{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0}
+.stacks{display:grid;gap:6px}
+.stk{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--felt);text-align:left;width:100%}
+.stk.sel{border-color:var(--brass);box-shadow:inset 0 0 0 1px var(--brass)}
+.stk .n{font-size:22px;font-weight:700;min-width:2ch;font-variant-numeric:tabular-nums}
+.stk .d{font-size:14px;color:var(--muted)}
+.stk .p{font-weight:700;font-variant-numeric:tabular-nums}
+.amt{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.amt .step{flex:1;max-width:200px}
+.acts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.acts .btn{height:44px;font-size:15px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.preset{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}
+.preset button{text-align:left;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--felt);display:flex;justify-content:space-between;gap:6px;align-items:center}
+.preset .pip{width:10px;height:10px;border-radius:50%;background:var(--fr);flex:none}
+.preset .s{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+form{display:grid;gap:10px}
+.f2{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.fld{display:grid;gap:3px;min-width:0}
+.fld span{font-size:12px;color:var(--muted)}
+input,select,textarea{font:inherit;background:var(--felt);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
+textarea{min-height:56px;resize:vertical}
+.chk{display:flex;gap:8px;align-items:center;font-size:15px}
+.chk input{width:auto}
+@media (prefers-reduced-motion:no-preference){.sheet.anim{animation:up .18s ease-out}@keyframes up{from{transform:translateY(24px);opacity:.6}}}
+.art.ph{box-shadow:inset 0 -46px 36px -24px rgba(0,0,0,.6),inset 0 0 0 1px rgba(0,0,0,.35)}
+.search{position:relative}
+.search input{padding-left:34px}
+.search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2}
+.thumb{display:flex;gap:10px;align-items:center}
+.thumb .pv{width:72px;aspect-ratio:4/3;border-radius:6px;border:1px solid var(--line);background:var(--felt) center/cover no-repeat;flex:none}
+.filebtn{position:relative;overflow:hidden}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.pastebox{font-size:14px;border-style:dashed}
+.ghost:disabled{opacity:.35;cursor:default}
+.mods{grid-template-columns:repeat(2,minmax(0,1fr))}
+.topbar{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px}
+.lifebox{background:var(--felt-2);border:1px solid var(--line);border-radius:10px;padding:6px 10px;display:grid;gap:2px}
+.lifebox .step{gap:10px}
+.buffbtn{display:grid;gap:2px;align-content:center;text-align:left;background:var(--felt-2);border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-width:0}
+.buffbtn .bline{display:flex;align-items:center;gap:8px;min-width:0}
+.buffbtn .bsum{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;color:var(--muted)}
+.buffbtn .bsum.on{color:var(--brass)}
+.buffbtn i{font-style:normal;color:var(--muted);font-size:13px;flex:none}
+.toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.arr{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
+.arr select{width:auto;min-width:0;max-width:100%;padding:6px 8px}
+.toolbar{flex-wrap:nowrap}
+.toolbar .ghost{flex:none}
+.ghost.on{border-color:var(--brass);color:var(--brass);font-weight:600}
+.gh{grid-column:1/-1;display:flex;gap:10px;align-items:center;justify-content:space-between;background:none;border:0;border-bottom:1px solid var(--line);padding:8px 2px 6px;width:100%;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:4px}
+.gh i{font-style:normal;color:var(--brass);font-weight:600;letter-spacing:0;text-transform:none;font-size:13px}
+.step .lifetap{width:auto;height:auto;border-radius:0;background:none;border:0;border-bottom:2px dashed var(--line);font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;padding:0 4px;min-width:2.4ch;line-height:1.2}
+.lifebig{font-size:64px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums;line-height:1}
+.lifebtns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lifebtns .btn{height:52px;font-size:20px;font-variant-numeric:tabular-nums}
+.lifebtns .btn.down{color:var(--danger)}
+.lifebtns .btn.up{color:var(--c-ready)}
+.quick.e2{grid-template-columns:1fr 1fr}
+.mod.sw2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.switch{display:flex;align-items:center;gap:10px;text-align:left;background:var(--felt);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-width:0}
+.switch .knob{flex:none;width:38px;height:22px;border-radius:999px;background:var(--felt-3);border:1px solid var(--line);position:relative;transition:background .15s}
+.switch .knob::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--muted);transition:transform .15s,background .15s}
+.switch[aria-checked="true"] .knob{background:var(--brass);border-color:var(--brass)}
+.switch[aria-checked="true"] .knob::after{transform:translateX(16px);background:var(--brass-ink)}
+.switch span:last-child{display:grid;min-width:0}
+.switch b{font-size:14px;line-height:1.2}
+.switch small{font-size:11.5px;color:var(--muted)}
+@media (max-width:380px){.mod.sw2{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.switch .knob,.switch .knob::after{transition:none}}
+.sfitem.imp{opacity:.55}
+.sfitem.imp.on{opacity:1;border-color:var(--brass);box-shadow:inset 0 0 0 1px var(--brass)}
+.mini{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px}
+.mini button{display:flex;align-items:baseline;gap:6px;padding:6px 10px 6px 8px;border-radius:8px;border:1px solid var(--line);border-left:6px solid var(--fr);background:var(--felt-2);font-size:14px}
+.mini button b{font-weight:600}
+.mini button span{font-weight:700;font-variant-numeric:tabular-nums}
+.mini button em{font-style:normal;color:var(--muted);font-variant-numeric:tabular-nums}
+.mini button small{color:var(--c-ready);font-size:12px}
+.mini button.gone{filter:grayscale(1);opacity:.6}
+.movebar{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.movebar button{height:38px;border-radius:8px;border:1px dashed var(--brass);background:var(--felt-2);color:var(--brass);font-weight:700;font-size:14px}
+.movebar button:disabled{opacity:.3;cursor:default}
+.slot.arranging .card{outline:2px dashed var(--brass);outline-offset:3px}
+.secbtn{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--felt);font-weight:600;text-align:left}
+.secbtn small{color:var(--muted);font-weight:500}
+.secbtn i{font-style:normal;color:var(--brass);font-size:20px;line-height:1;flex:none}
+.secbody{display:grid;gap:10px;padding:0 2px 4px}
+.frames{display:flex;flex-wrap:wrap;gap:8px}
+.frames button{width:34px;height:34px;border-radius:8px;border:2px solid var(--line)}
+.frames button.on{border-color:var(--ink);box-shadow:0 0 0 2px var(--brass)}
+.mod.wide{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.mod.wide .step{width:150px}
+.pr{display:grid;grid-template-columns:1.1em 1fr;align-items:center;gap:4px}
+.pr i{font-style:normal;font-size:12px;font-weight:600;color:var(--muted)}
+.bar .in{grid-template-columns:auto 1.1fr 1fr 1fr;gap:8px}
+.bar .btn{font-size:15px;padding:0 6px}
+.ghost.on{border-color:var(--danger);color:var(--danger);font-weight:600}
+.btn.sm{padding:0 16px}
+.tx{white-space:pre-line}
+.kw{display:grid;gap:6px}
+.tog{display:flex;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--felt);font-size:14px}
+.tog input{width:20px;height:20px;flex:none;accent-color:var(--brass)}
+.tog span{color:var(--muted)}
+.tog b{color:var(--ink);font-weight:600;margin-right:4px}
+.arow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--felt)}
+.arow .who{min-width:0}
+.arow .who b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arow .who small{color:var(--muted);font-size:13px}
+.arow .step{gap:6px}
+.arow .step output{min-width:2.2ch}
+.dmg{display:flex;justify-content:space-between;align-items:baseline;padding:4px 2px}
+.dmg b{font-size:30px;color:var(--brass);font-variant-numeric:tabular-nums}
+button{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+.step output.life{font-size:24px}
+.card{transition:filter .3s ease}
+.card.gone{filter:grayscale(1) brightness(.92) contrast(1.05)}
+@media (prefers-reduced-motion:reduce){.card{transition:none}}
+.quick button:disabled{opacity:.4;cursor:default}
+.dmgrow{grid-column:1/-1;display:grid;grid-template-columns:auto minmax(0,140px) 1fr;gap:8px;align-items:center}
+@media (max-width:380px){.dmgrow{grid-template-columns:1fr 1fr}.dmgrow .btn{grid-column:1/-1}}
+.atk>div{display:grid;gap:4px;justify-items:start}
+.atkbtn{background:color-mix(in srgb,var(--brass-ink) 14%,transparent);border:1px solid color-mix(in srgb,var(--brass-ink) 35%,transparent);color:var(--brass-ink);border-radius:7px;padding:3px 10px;font-size:13px;font-weight:700}
+.turnline{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;font-size:14px;color:var(--muted)}
+.turnline b{color:var(--ink);font-variant-numeric:tabular-nums}
+.bonusrow{grid-column:1/-1;display:grid;gap:6px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--felt)}
+.trow{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:13px;color:var(--muted)}
+.trow .step{width:130px}
+.trow b{color:var(--brass);font-size:15px}
+.sfres{display:grid;gap:6px}
+.sfitem{display:grid;grid-template-columns:76px minmax(0,1fr);gap:10px;align-items:center;text-align:left;padding:6px;border-radius:10px;border:1px solid var(--line);background:var(--felt)}
+.sfart{width:76px;aspect-ratio:4/3;border-radius:6px;background:var(--felt-3) center/cover no-repeat}
+.sfmeta{display:grid;gap:2px;min-width:0}
+.sfmeta b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sfmeta small{color:var(--muted);font-size:12px}
+.sftext{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.chip.dead{border-color:var(--danger);color:var(--danger)}
+.pt.dead{background:#f4b3a2}
+.stk.dead{border-color:var(--danger)}
+.deadbar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 8px 8px 14px;border:1px solid var(--danger);border-radius:10px;color:var(--danger);font-weight:600}
+.deadbar button{background:var(--danger);color:var(--brass-ink);border:0;border-radius:8px;padding:8px 14px;font-weight:700}
+.lastlog{display:flex;justify-content:space-between;align-items:center;gap:10px;background:none;border:0;border-bottom:1px dashed var(--line);padding:2px 2px 8px;color:var(--muted);font-size:14px;text-align:left;width:100%}
+.lastlog span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lastlog em{font-style:normal;color:var(--brass);font-weight:600;flex:none}
+.menu{display:grid;gap:8px}
+.menu button{display:grid;gap:2px;text-align:left;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--felt)}
+.menu b{font-size:16px}
+.menu span{font-size:13px;color:var(--muted)}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{background:var(--felt);border:0;border-right:1px solid var(--line);padding:10px 0;font-weight:600;font-variant-numeric:tabular-nums}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--brass);color:var(--brass-ink)}
+.btn.warnbtn{background:var(--danger);border-color:var(--danger);color:var(--brass-ink)}
+.deckform{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.deckform .btn{height:auto;padding:0 16px}
+.loglist{list-style:none;margin:0;padding:0;display:grid}
+.loglist li{display:flex;justify-content:space-between;gap:12px;padding:9px 2px;border-bottom:1px solid var(--line);font-size:15px}
+.loglist time{color:var(--muted);font-size:13px;flex:none;font-variant-numeric:tabular-nums}
+.themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.theme{display:grid;gap:8px;padding:10px;border-radius:10px;border:1px solid var(--line);text-align:left;background:var(--felt)}
+.theme.on{border-color:var(--brass);box-shadow:inset 0 0 0 1px var(--brass)}
+.theme .sw{display:flex;height:34px;border-radius:6px;overflow:hidden;border:1px solid rgba(0,0,0,.25)}
+.theme .sw i{flex:1}
+.theme .sw i:last-child{flex:.6}
+.theme b{font-size:15px}
+.theme span{font-size:12px;color:var(--muted)}
+.pick{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.pick input[type=color]{width:56px;height:40px;padding:2px;border-radius:8px;cursor:pointer}
+.swatches{display:flex;gap:8px;flex-wrap:wrap}
+.swatches button{width:34px;height:34px;border-radius:50%;border:2px solid var(--line)}
+.swatches button.on{border-color:var(--ink)}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;min-height:90px}
+.warnline{font-size:13px;color:var(--danger)}
+</style>
+
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div id="layer"></div>
+
+<script>
+const COLORS={
+  W:{fr:"#d9d2b4",art:"linear-gradient(160deg,#f3e8b8,#b8a467)"},
+  U:{fr:"#7fa9cc",art:"linear-gradient(160deg,#7cb6e0,#2f5d8a)"},
+  B:{fr:"#6e6767",art:"linear-gradient(160deg,#5b4c5c,#1d1820)"},
+  R:{fr:"#cf7b5e",art:"linear-gradient(160deg,#ef8a5c,#8c2c1c)"},
+  G:{fr:"#7da77a",art:"linear-gradient(160deg,#8cc37a,#2e5a2c)"},
+  C:{fr:"#a9adb6",art:"linear-gradient(160deg,#c9ccd3,#5e6470)"},
+  M:{fr:"#cdb36a",art:"linear-gradient(160deg,#e8cf7c,#8a6b22)"}
+};
+const KWN={vig:"Vigilance",haste:"Haste",def:"Defender",ind:"Indestructible",tr:"Trample",dth:"Deathtouch"};
+const KWD={vig:"attacking doesn't tap it",haste:"can attack the turn it's made",def:"never counted as ready to attack",ind:"survives lethal damage and deathtouch, not 0 toughness",tr:"excess combat damage over blockers hits the player",dth:"1 damage is lethal to its blockers (used for trample math)"};
+function kwFrom(text){const o={};for(const k in KWN)o[k]=new RegExp("\\b"+KWN[k]+"\\b","i").test(text||"");return o}
+const PRESETS=[
+  ["Soldier",1,1,"W"],["Spirit",1,1,"W","Flying"],["Human",1,1,"W"],["Cat",2,2,"W"],["Knight",2,2,"W","Vigilance"],["Angel",4,4,"W","Flying"],
+  ["Bird",1,1,"U","Flying"],["Faerie",1,1,"U","Flying"],["Drake",2,2,"U","Flying"],
+  ["Zombie",2,2,"B"],["Rat",1,1,"B"],["Vampire",1,1,"B","Lifelink"],["Germ",0,0,"B"],
+  ["Goblin",1,1,"R"],["Elemental",1,1,"R"],["Devil",1,1,"R","When this creature dies, it deals 1 damage to any target."],["Dragon",5,5,"R","Flying"],
+  ["Saproling",1,1,"G"],["Insect",1,1,"G"],["Squirrel",1,1,"G"],["Elf Warrior",1,1,"G"],["Plant",0,1,"G"],["Spider",1,2,"G","Reach"],["Wolf",2,2,"G"],["Beast",3,3,"G"],["Wurm",6,6,"G"],
+  ["Thopter",1,1,"C","Flying",{art:true}],["Servo",1,1,"C","",{art:true}],["Golem",3,3,"C","",{art:true}],
+  ["Blood",null,null,"C","{1}, {T}, Discard a card, Sacrifice this artifact: Draw a card.",{art:true,nc:true}],
+  ["Treasure",null,null,"C","{T}, Sacrifice this artifact: Add one mana of any color.",{art:true,nc:true}],
+  ["Clue",null,null,"C","{2}, Sacrifice this artifact: Draw a card.",{art:true,nc:true}],
+  ["Food",null,null,"C","{2}, {T}, Sacrifice this artifact: You gain 3 life.",{art:true,nc:true}]
+].map(([name,p,t,col,text="",o={}])=>({name,p,t,col,text,art:!!o.art,creature:!o.nc,kw:kwFrom(text)}));
+
+const KEY="tokenboard-test.v1",DKEY="tokenboard-test.decks.v1";
+let uid=1;const nid=()=>"t"+(Date.now().toString(36))+(uid++);
+/* the parts of a token that define its type (no counts) */
+const typeOf=t=>({name:t.name,p:t.p,t:t.t,col:t.col,text:t.text,art:t.art,creature:t.creature,kw:{...t.kw},bP:t.bP||0,bT:t.bT||0,ench:!!t.ench,emblem:!!t.emblem,...(t.img?{img:t.img}:{}),...(t.frame?{frame:t.frame}:{})});
+const newTok=def=>({...typeOf(def),id:nid(),stacks:[]});
+const fresh=start=>({defAtk:false,tough:false,tokens:[],aP:0,aT:0,eP:0,eT:0,dbl:0,life:start,start,lastAtk:null,log:[],turn:{e:0,d:0,s:0},example:false});
+function example(){
+  const P=n=>newTok(PRESETS.find(p=>p.name===n));
+  const s=P("Soldier"); s.stacks=[{n:4,tapped:false,sick:false,c:0},{n:3,tapped:true,sick:false,c:0},{n:2,tapped:false,sick:true,c:0},{n:2,tapped:false,sick:false,c:1}];
+  const g=P("Saproling"); g.stacks=[{n:5,tapped:false,sick:false,c:0}];
+  const tr=P("Treasure"); tr.stacks=[{n:2,tapped:false,sick:false,c:0}];
+  return{...fresh(20),tokens:[s,g,tr],aP:1,aT:1,example:true};
+}
+function norm(o){
+  o.defAtk??=false;o.tough??=false;o.eP??=0;o.eT??=0;o.dbl??=0;o.aP??=0;o.aT??=0;o.start??=20;o.life??=o.start;o.log??=[];o.lastAtk??=null;o.turn??={e:0,d:0,s:0};
+  o.tokens.forEach(t=>{t.ench??=false;t.emblem??=false;t.kw??=kwFrom(t.text);t.bP??=0;t.bT??=0;t.stacks??=[];t.id??=nid()});
+  return o;
+}
+const load=(k)=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}};
+let S=load(KEY);
+S=S&&Array.isArray(S.tokens)?norm(S):example();
+let D=load(DKEY);if(!Array.isArray(D))D=[];
+/* per-phone view settings: board arrangement, open panels */
+const UKEY="tokenboard-test.ui.v1";
+let UI=load(UKEY)||{};UI.arr??="mine";UI.buffs??=false;UI.open??={};UI.collapsed??={};
+function saveUI(){try{localStorage.setItem(UKEY,JSON.stringify(UI))}catch(e){}}
+let arranging=false;
+const ARR={mine:"My order",type:"Creatures, Tokens",color:"By color",name:"By name"};
+const CNAME={W:"White",U:"Blue",B:"Black",R:"Red",G:"Green",M:"Multicolor",C:"Colorless"};
+function displayGroups(){
+  const list=[...S.tokens];
+  if(UI.arr==="type")return [{h:"Creatures",items:list.filter(t=>t.creature&&!t.emblem)},{h:"Tokens",items:list.filter(t=>!t.creature&&!t.emblem)},{h:"Emblems",items:list.filter(t=>t.emblem)}].filter(g=>g.items.length);
+  if(UI.arr==="color")return [..."WUBRGMC".split("").map(c=>({h:CNAME[c],items:list.filter(t=>!t.emblem&&(t.col||"C")===c)})),{h:"Emblems",items:list.filter(t=>t.emblem)}].filter(g=>g.items.length);
+  if(UI.arr==="name")return [{h:null,items:list.sort((a,b)=>a.name.localeCompare(b.name))}];
+  return [{h:null,items:list}];
+}
+/* swap a token with its neighbour as shown on screen; returns false at the edge of its group */
+function moveTok(id,dir){
+  for(const g of displayGroups()){const i=g.items.findIndex(t=>t.id===id);if(i<0)continue;
+    const j=i+dir;if(j<0||j>=g.items.length)return false;
+    const a=S.tokens.indexOf(g.items[i]),b=S.tokens.indexOf(g.items[j]);[S.tokens[a],S.tokens[b]]=[S.tokens[b],S.tokens[a]];return true}
+  return false;
+}
+const FRAMES=["#d9d2b4","#7fa9cc","#6e6767","#cf7b5e","#7da77a","#a9adb6","#cdb36a","#b8923a","#c6c9cf","#2e2c30","#c9879a","#5fa8a0","#8d6fb8","#d98c3f"];
+
+/* ---------- color themes (kept separately; not affected by undo or New game) ---------- */
+const THEMES={
+  forest:{label:"Forest",note:"Green playmat (default)",light:false,v:{felt:"#11241d","felt-2":"#183128","felt-3":"#21402f",line:"#2d4c3e",ink:"#eee8d8",muted:"#9db3a7",brass:"#d6ab52",danger:"#e3795c","c-ready":"#a9dcbc","c-tap":"#e2c47e","c-sick":"#aec4e2","c-ctr":"#dcb2ea"}},
+  island:{label:"Island",note:"Deep sea blue",light:false,v:{felt:"#0e1b29","felt-2":"#142638","felt-3":"#1c344d",line:"#29435d",ink:"#e5edf5",muted:"#9bb0c5",brass:"#6fb8ea",danger:"#ec806a","c-ready":"#9fdcc0","c-tap":"#ead08a","c-sick":"#b9cff0","c-ctr":"#dcb6f0"}},
+  swamp:{label:"Swamp",note:"Charcoal and violet",light:false,v:{felt:"#141218","felt-2":"#1d1a23","felt-3":"#28232f",line:"#3a3343",ink:"#ece6f1",muted:"#a89fb2",brass:"#b98bdc",danger:"#ec7f6a","c-ready":"#a6dcbc","c-tap":"#e6c985","c-sick":"#b4c8ea","c-ctr":"#e0b8f2"}},
+  mountain:{label:"Mountain",note:"Ember red and rust",light:false,v:{felt:"#1f120e","felt-2":"#2a1813","felt-3":"#38211a",line:"#523026",ink:"#f4e8e2",muted:"#c4a497",brass:"#f08d5e",danger:"#ff9a7a","c-ready":"#a9dcb8","c-tap":"#f0cf86","c-sick":"#b6cbec","c-ctr":"#e3b8ee"}},
+  plains:{label:"Plains",note:"Light, for bright rooms",light:true,v:{felt:"#f1ece0","felt-2":"#fbf8f0","felt-3":"#e7dfcc",line:"#d3c7ad",ink:"#2a2418",muted:"#6f6553",brass:"#946a12",danger:"#b4452a","c-ready":"#2b7349","c-tap":"#87620f","c-sick":"#3a5c88","c-ctr":"#76398f"}},
+  artifact:{label:"Artifact",note:"Neutral steel grey",light:false,v:{felt:"#141516","felt-2":"#1c1e20","felt-3":"#26292c",line:"#363a3f",ink:"#eceef0",muted:"#a1a7ae",brass:"#c9ced6",danger:"#e8806a","c-ready":"#a6d9bb","c-tap":"#e3c886","c-sick":"#b1c6e6","c-ctr":"#d9b5ea"}},
+  azorius:{label:"Azorius",note:"White–blue, light",g:"guild",light:true,v:{felt:"#e9eef5","felt-2":"#f7f9fc","felt-3":"#dbe4ef",line:"#c3d0e0",ink:"#1b2433",muted:"#5a6a80",brass:"#2f6db0",danger:"#b4452a","c-ready":"#2b7349","c-tap":"#87620f","c-sick":"#3a5c88","c-ctr":"#76398f"}},
+  dimir:{label:"Dimir",note:"Blue–black, ink and indigo",g:"guild",light:false,v:{felt:"#0f1220","felt-2":"#161a2c","felt-3":"#20253b",line:"#2f3552",ink:"#e4e7f2",muted:"#9aa1bf",brass:"#8a98ff",danger:"#ec806a","c-ready":"#a9dcbc","c-tap":"#e2c47e","c-sick":"#aec4e2","c-ctr":"#dcb2ea"}},
+  rakdos:{label:"Rakdos",note:"Black–red, blood and smoke",g:"guild",light:false,v:{felt:"#1a0c10","felt-2":"#241217","felt-3":"#321920",line:"#4c2630",ink:"#f3e5e8",muted:"#c09aa3",brass:"#ec5a64",danger:"#ffb067","c-ready":"#a9dcbc","c-tap":"#e2c47e","c-sick":"#aec4e2","c-ctr":"#dcb2ea"}},
+  gruul:{label:"Gruul",note:"Red–green, clay and ember",g:"guild",light:false,v:{felt:"#1d150c","felt-2":"#271d11","felt-3":"#352717",line:"#4f3a22",ink:"#f2eadf",muted:"#c0ab91",brass:"#e7853f",danger:"#ff8f6b","c-ready":"#a9dcbc","c-tap":"#e2c47e","c-sick":"#aec4e2","c-ctr":"#dcb2ea"}},
+  selesnya:{label:"Selesnya",note:"Green–white, light",g:"guild",light:true,v:{felt:"#eef0e2","felt-2":"#fafbf2","felt-3":"#e0e5cc",line:"#ccd3b0",ink:"#252a1a",muted:"#626b4f",brass:"#4a8429",danger:"#b4452a","c-ready":"#2b7349","c-tap":"#87620f","c-sick":"#3a5c88","c-ctr":"#76398f"}},
+  orzhov:{label:"Orzhov",note:"White–black, marble and gold",g:"guild",light:false,v:{felt:"#17151a","felt-2":"#201d24","felt-3":"#2b2730",line:"#3d3844",ink:"#f1ede4",muted:"#b0a99e",brass:"#e2cf9a",danger:"#e8806a","c-ready":"#a9dcbc","c-tap":"#e2c47e","c-sick":"#aec4e2","c-ctr":"#dcb2ea"}},
+  izzet:{label:"Izzet",note:"Blue–red, storm and spark",g:"guild",light:false,v:{felt:"#10172a","felt-2":"#172036","felt-3":"#202b46",line:"#2e3c5e",ink:"#eaf0fb",muted:"#a3b2cf",brass:"#ff7a45",danger:"#ff9a9a","c-ready":"#a9dcbc","c-tap":"#e2c47e","c-sick":"#aec4e2","c-ctr":"#dcb2ea"}},
+  golgari:{label:"Golgari",note:"Black–green, moss and rot",g:"guild",light:false,v:{felt:"#12160f","felt-2":"#1a2015","felt-3":"#242c1d",line:"#34402a",ink:"#e6ead8",muted:"#a2ab8c",brass:"#a6c95e",danger:"#e3795c","c-ready":"#a9dcbc","c-tap":"#e2c47e","c-sick":"#aec4e2","c-ctr":"#dcb2ea"}},
+  boros:{label:"Boros",note:"Red–white, sun and steel",g:"guild",light:false,v:{felt:"#20120c","felt-2":"#2b1a12","felt-3":"#3a2418",line:"#563626",ink:"#f7ece0",muted:"#cbab92",brass:"#f2b84b",danger:"#ff8a6a","c-ready":"#a9dcbc","c-tap":"#e2c47e","c-sick":"#aec4e2","c-ctr":"#dcb2ea"}},
+  simic:{label:"Simic",note:"Green–blue, deep reef",g:"guild",light:false,v:{felt:"#0c1c1b","felt-2":"#122725","felt-3":"#1a3532",line:"#264d48",ink:"#e3f3ef",muted:"#93bdb4",brass:"#4fd1b5",danger:"#ec806a","c-ready":"#a9dcbc","c-tap":"#e2c47e","c-sick":"#aec4e2","c-ctr":"#dcb2ea"}},
+  void:{label:"Void",note:"True black, saves battery",g:"other",light:false,v:{felt:"#000000","felt-2":"#0b0b0d","felt-3":"#151518",line:"#26262b",ink:"#ececf0",muted:"#9a9aa4",brass:"#c8a2ff",danger:"#ff7d6b","c-ready":"#a9dcbc","c-tap":"#e2c47e","c-sick":"#aec4e2","c-ctr":"#dcb2ea"}}
+};
+const ACCENTS=["#d6ab52","#e8d9a8","#6fb8ea","#b98bdc","#f08d5e","#7fc77a","#e35d6a","#c9ced6"];
+const TKEY="tokenboard-test.theme.v1";
+let TH=load(TKEY);if(!TH||!THEMES[TH.name])TH={name:"forest",accent:null};
+function inkFor(hex){const n=parseInt(hex.slice(1),16),c=[n>>16&255,n>>8&255,n&255].map(v=>{v/=255;return v<=.03928?v/12.92:((v+.055)/1.055)**2.4});
+  const L=.2126*c[0]+.7152*c[1]+.0722*c[2];return (L+.05)/(.006+.05)>=(.98+.05)/(L+.05)?"#16120a":"#fffaf0"}
+function applyTheme(){
+  const th=THEMES[TH.name],r=document.documentElement;
+  for(const k in th.v)r.style.setProperty("--"+k,th.v[k]);
+  const acc=TH.accent||th.v.brass;
+  r.style.setProperty("--brass",acc);r.style.setProperty("--brass-ink",inkFor(acc));
+  r.style.colorScheme=th.light?"light":"dark";
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content",th.v.felt);
+  try{localStorage.setItem(TKEY,JSON.stringify(TH))}catch(e){}
+}
+applyTheme();
+let saveFailed=false;
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));localStorage.setItem(DKEY,JSON.stringify(D));saveFailed=false}catch(e){saveFailed=true}}
+
+/* Undo: snapshots kept in memory for this session (photos are shared, not copied) */
+let hist=[];
+const clone=o=>({...o,turn:{...o.turn},lastAtk:o.lastAtk?JSON.parse(JSON.stringify(o.lastAtk)):null,log:o.log.map(e=>({...e})),tokens:o.tokens.map(t=>({...t,kw:{...t.kw},stacks:t.stacks.map(s=>({...s}))}))});
+function snap(){hist.push(clone(S));if(hist.length>60)hist.shift()}
+
+/* Game log; repeated changes of the same kind merge into one line */
+const hhmm=()=>new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});
+function log(m,k){const last=S.log[S.log.length-1];
+  if(k&&last&&last.k===k){last.m=m;last.ts=hhmm();return}
+  S.log.push({m,k:k||null,ts:hhmm()});if(S.log.length>100)S.log.shift();}
+
+/* counts from repeated quick taps add up into one line */
+function logAdd(k,n,verb,name){const last=S.log[S.log.length-1];
+  if(last&&last.k===k){last.n+=n;last.m=`${verb} ${last.n} ${name}`;last.ts=hhmm();return}
+  log(`${verb} ${n} ${name}`);const e=S.log[S.log.length-1];e.k=k;e.n=n;}
+
+function shrink(file){return new Promise((res,rej)=>{
+  const r=new FileReader();r.onerror=rej;r.onload=()=>{const im=new Image();im.onerror=rej;im.onload=()=>{
+    const max=480,k=Math.min(1,max/Math.max(im.width,im.height));
+    const c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
+    c.getContext("2d").drawImage(im,0,0,c.width,c.height);res(c.toDataURL("image/jpeg",.78));};im.src=r.result;};
+  r.readAsDataURL(file);});}
+const artBg=t=>t.img?`url('${t.img}') center/cover no-repeat`:(COLORS[t.col]||COLORS.C).art;
+
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const sgn=v=>(v>=0?"+":"")+v;
+const mult=()=>2**S.dbl;
+const cnt=t=>t.stacks.reduce((a,s)=>a+s.n,0);
+const bufP=t=>S.aP+S.eP+(t.bP||0), bufT=t=>S.aT+S.eT+(t.bT||0);
+const pw=(t,s)=>t.p+s.c+(s.mp||0)+bufP(t), tg=(t,s)=>t.t+s.c+(s.mt||0)+bufT(t);
+/* identity of a group: tokens that match on all of these are interchangeable */
+const skey=s=>[s.tapped,s.sick,s.c,s.d||0,!!s.dt,s.mp||0,s.mt||0].join();
+const ptStr=(t,c)=>`${t.p+c+bufP(t)}/${t.t+c+bufT(t)}`;
+const plural=(n,w)=>`${n} ${w}`;
+function merge(t){
+  const m=new Map();
+  for(const s of t.stacks){if(s.n<=0)continue;s.d??=0;s.dt=!!s.dt;s.mp??=0;s.mt??=0;const k=skey(s);
+    if(m.has(k))m.get(k).n+=s.n;else m.set(k,{...s});}
+  t.stacks=[...m.values()].sort((a,b)=>(a.tapped-b.tapped)||(a.sick-b.sick)||(a.c-b.c));
+}
+/* unblocked damage after blocks are marked */
+/* 702.19b: a blocked trampler must assign lethal damage to its blocker first; deathtouch makes 1 lethal (702.2c) */
+const throughEach=(A,i)=>{const g=A.att[i];if(!g.tr)return 0;const need=g.dth?1:(A.bt?.[i]??1);return Math.max(0,g.p-need)};
+function atkDamage(A){if(!A)return 0;if(!A.att)return A.p;
+  return A.att.reduce((a,g,i)=>{const b=A.bl?.[i]||0;return a+(g.k-b)*g.p+b*throughEach(A,i)},0)+(A.x||0)}
+const blockedN=A=>A?.att?A.att.reduce((a,g,i)=>a+(A.bl?.[i]||0),0):0;
+function sac(t,stack,n){if(!stack||n<=0)return 0;n=Math.min(n,stack.n);stack.n-=n;merge(t);S.turn.s+=n;if(t.creature)S.turn.d+=n;return n}
+function create(t,n,ec=0){const k=t.emblem?n:n*mult();t.stacks.push({n:k,tapped:false,sick:t.creature,c:t.creature?ec:0,d:0,dt:false,mp:0,mt:0});merge(t);S.example=false;if(!t.emblem)S.turn.e+=k;
+  if(t.emblem){logAdd("mk"+t.id,k,"Gained",t.name+" emblem");return}
+  if(ec&&t.creature)log(`Made ${k} ${t.name} with ${ec} +1/+1 counter${ec>1?"s":""} each`);else logAdd("mk"+t.id,k,"Made",t.name)}
+/* state-based actions: 0 toughness, or lethal damage marked */
+const zeroT=(t,s)=>t.creature&&tg(t,s)<=0;
+/* 704.5g lethal damage and 704.5h deathtouch both destroy, so indestructible ignores them (702.12b); 704.5f does not */
+const lethal=(t,s)=>t.creature&&!t.kw.ind&&tg(t,s)>0&&(s.d||0)>0&&s.d>=tg(t,s);
+const dtDead=(t,s)=>t.creature&&!t.kw.ind&&tg(t,s)>0&&s.dt;
+const isDead=(t,s)=>zeroT(t,s)||lethal(t,s)||dtDead(t,s);
+const deadN=t=>t.stacks.filter(s=>isDead(t,s)).reduce((a,s)=>a+s.n,0);
+const dmgOf=(t,s)=>Math.max(0,S.tough?tg(t,s):pw(t,s));
+const isReady=(t,s)=>t.creature&&(!t.kw.def||S.defAtk)&&!s.tapped&&(!s.sick||t.kw.haste)&&!isDead(t,s);
+const readyOf=t=>t.stacks.filter(s=>isReady(t,s));
+const readyN=t=>readyOf(t).reduce((a,s)=>a+s.n,0);
+function totals(){
+  let all=0,cre=0,ready=0,rp=0,dead=0;
+  for(const t of S.tokens)for(const s of t.stacks){if(t.emblem)continue;all+=s.n;if(!t.creature)continue;cre+=s.n;
+    if(isDead(t,s))dead+=s.n;else if(isReady(t,s)){ready+=s.n;rp+=s.n*dmgOf(t,s)}}
+  return{all,cre,ready,rp,dead};
+}
+function pick(t,n){const out=[];for(const s of [...readyOf(t)].sort((a,b)=>dmgOf(t,b)-dmgOf(t,a))){if(n<=0)break;const k=Math.min(n,s.n);out.push({s,k});n-=k}return out}
+function typeLine(t){
+  if(t.emblem)return `Emblem — ${t.name}`;
+  const parts=[t.art?"Artifact":"",t.ench?"Enchantment":"",t.creature?"Creature":""].filter(Boolean);
+  return `Token ${parts.join(" ")||"Artifact"} — ${t.name}`}
+function abilityText(t){
+  const miss=Object.keys(KWN).filter(k=>t.kw?.[k]&&!new RegExp("\\b"+KWN[k]+"\\b","i").test(t.text||"")).map(k=>KWN[k]);
+  return [miss.join(", "),t.text].filter(Boolean).join("\n");
+}
+
+function cardHTML(t){
+  const c=COLORS[t.col]||COLORS.C,n=cnt(t),txt=abilityText(t);
+  const buffed=t.creature&&(bufP(t)||bufT(t)),dead=t.creature&&t.t+bufT(t)<=0;
+  return `<button class="card${n?"":" gone"}" data-a="open" data-id="${t.id}" aria-label="${esc(t.name)}, ${n} in play" style="--fr:${t.frame||c.fr};--art:${artBg(t)}">
+    <div class="frame">
+      <div class="nm">${esc(t.name)}</div>
+      <div class="art${t.img?" ph":""}"><div class="ct"><small>×</small>${n}</div></div>
+      <div class="tl">${esc(typeLine(t))}</div>
+      <div class="tx">${txt?esc(txt):"<i>No abilities</i>"}</div>
+    </div>
+    ${t.creature?`<div class="pt${dead?" dead":buffed?" buffed":""}">${ptStr(t,0)}</div>`:""}
+  </button>`;
+}
+function chipsHTML(t){
+  if(t.emblem)return cnt(t)?"":`<span class="chip">None yet</span>`;
+  if(!cnt(t))return `<span class="chip">Not on the field</span>`;
+  const sum=f=>t.stacks.filter(f).reduce((a,s)=>a+s.n,0);
+  const tp=sum(s=>s.tapped);
+  if(!t.creature)return tp?`<span class="chip tap">${tp} tapped</span>`:"";
+  const dn=deadN(t),r=readyN(t),sk=t.kw.haste?0:sum(s=>s.sick&&!s.tapped&&!isDead(t,s)),ct=sum(s=>s.c!==0||s.mp||s.mt),dm=sum(s=>s.d>0&&!isDead(t,s)),df=t.kw.def?sum(s=>!s.tapped):0;
+  return [dn?`<span class="chip dead">${dn} dying</span>`:"",r?`<span class="chip ready">${r} ready</span>`:"",df?`<span class="chip">${df} untapped</span>`:"",tp?`<span class="chip tap">${tp} tapped</span>`:"",
+    sk?`<span class="chip sick">${sk} sick</span>`:"",dm?`<span class="chip tap">${dm} damaged</span>`:"",ct?`<span class="chip ctr">${ct} modified</span>`:"",(t.bP||t.bT)?`<span class="chip ctr">type ${sgn(t.bP)}/${sgn(t.bT)}</span>`:""].join("");
+}
+const stepper=(k,label,a="mod")=>`<div class="step"><button data-a="${a}" data-k="${k}" data-v="-1" data-rep aria-label="Lower ${label}">−</button><output class="${S[k]?"on":""}">${sgn(S[k])}</output><button data-a="${a}" data-k="${k}" data-v="1" data-rep aria-label="Raise ${label}">+</button></div>`;
+
+function buffSummary(){const p=[];
+  if(S.aP||S.aT)p.push(`Anthem ${sgn(S.aP)}/${sgn(S.aT)}`);
+  if(S.eP||S.eT)p.push(`This turn ${sgn(S.eP)}/${sgn(S.eT)}`);
+  if(S.dbl)p.push(`Doublers ×${mult()}`);
+  if(S.defAtk)p.push("Defenders attack");
+  if(S.tough)p.push("Toughness damage");
+  return p.join(" · ")}
+function setHTML(el,html){if(el.__h===html)return;
+  const keep={};el.querySelectorAll("input[id],textarea[id]").forEach(i=>{if(i.type!=="file"&&i.type!=="checkbox")keep[i.id]=i.value});
+  el.innerHTML=html;el.__h=html;
+  for(const id in keep){const i=el.querySelector(`[id="${id}"]`);if(i&&!i.readOnly)i.value=keep[id]}}
+function render(){
+  save();
+  const T=totals(),last=S.log[S.log.length-1];
+  setHTML(document.getElementById("app"),`
+  <header><h1>Token Board</h1><button class="ghost" data-a="menu">Menu</button></header>
+  ${S.example?`<div class="note">Example board loaded. Moving over from the old version? Menu → Backup & restore. Otherwise start fresh from Menu → New game.</div>`:""}
+  <div class="topbar">
+    <div class="lifebox"><span class="sec">Life</span><div class="step"><button data-a="life" data-v="-1" data-rep aria-label="Lose life">−</button><button class="lifetap" data-a="lifesheet" aria-label="Life ${S.life}. Tap to change by 5, 10, or set it">${S.life}</button><button data-a="life" data-v="1" data-rep aria-label="Gain life">+</button></div></div>
+    <button class="buffbtn" data-a="buffs" aria-expanded="${UI.buffs}"><span class="sec">Buffs</span><span class="bline"><span class="bsum${buffSummary()?" on":""}">${buffSummary()||"None active"}</span><i>${UI.buffs?"Hide ▲":"Show ▼"}</i></span></button>
+  </div>
+  ${UI.buffs?`<div class="mods">
+    <div class="mod"><label>Anthem · all creatures</label>
+      <div class="pr"><i>P</i>${stepper("aP","anthem power")}</div>
+      <div class="pr"><i>T</i>${stepper("aT","anthem toughness")}</div></div>
+    <div class="mod"><label>Until end of turn</label>
+      <div class="pr"><i>P</i>${stepper("eP","temporary power")}</div>
+      <div class="pr"><i>T</i>${stepper("eT","temporary toughness")}</div></div>
+    <div class="mod wide sw2">
+      <button class="switch" data-a="flag" data-k="defAtk" role="switch" aria-checked="${S.defAtk}"><span class="knob"></span><span><b>Defenders can attack</b><small>Felothar, Assault Formation…</small></span></button>
+      <button class="switch" data-a="flag" data-k="tough" role="switch" aria-checked="${S.tough}"><span class="knob"></span><span><b>Damage = toughness</b><small>instead of power</small></span></button>
+    </div>
+    <div class="mod wide"><label>Doublers</label><div class="step"><button data-a="dbl" data-v="-1" aria-label="Fewer doublers">−</button><output class="${S.dbl?"on":""}">×${mult()}</output><button data-a="dbl" data-v="1" aria-label="More doublers">+</button></div></div>
+  </div>`:""}
+  <div class="sum">
+    <div><b>${T.all}</b><span>Tokens</span></div>
+    <div><b>${T.cre}</b><span>Creatures</span></div>
+    <div class="hot"><b>${T.ready}</b><span>Ready</span></div>
+    <div class="hot"><b>${T.rp}</b><span>${S.tough?"Ready damage":"Ready power"}</span></div>
+  </div>
+  ${T.dead?`<div class="deadbar"><span>${T.dead} token${T.dead>1?"s have":" has"} lethal damage or 0 toughness</span><button data-a="cleandead">Clean up</button></div>`:""}
+  ${S.lastAtk?`<div class="atk"><div><span>Attacking with ${S.lastAtk.n}${blockedN(S.lastAtk)?` · ${blockedN(S.lastAtk)} blocked`:""}</span>
+      ${S.lastAtk.att?`<button class="atkbtn" data-a="blkopen">Mark blocked</button>`:""}</div><b>${atkDamage(S.lastAtk)} dmg</b></div>`:""}
+  ${S.turn.e||S.turn.d||S.turn.s?`<div class="turnline"><span class="sec">This turn</span><span><b>${S.turn.e}</b> entered</span><span><b>${S.turn.d}</b> died</span><span><b>${S.turn.s}</b> sacrificed</span></div>`:""}
+  ${last?`<button class="lastlog" data-a="logsheet"><span>${esc(last.m)}</span><em>Log</em></button>`:""}
+  <div class="toolbar">
+    <label class="arr"><span class="sec">Show</span><select id="arr" aria-label="Arrange tokens">${Object.entries(ARR).map(([k,v])=>`<option value="${k}"${UI.arr===k?" selected":""}>${v}</option>`).join("")}</select></label>
+    ${S.tokens.length>1?`<button class="ghost${arranging?" on":""}" data-a="arrange" ${UI.arr==="name"?"disabled":""}>${arranging?"Done arranging":"Rearrange"}</button>`:""}
+  </div>
+  ${arranging?`<div class="note">Use the arrows to move tokens. ${UI.arr==="type"||UI.arr==="color"?"Tokens move within their group.":""}</div>`:""}
+  <div class="grid">
+    ${displayGroups().map(g=>{const ck=UI.arr+":"+g.h,shut=g.h&&UI.collapsed[ck]&&!arranging;
+      const head=g.h?`<button class="gh" data-a="grp" data-k="${esc(ck)}" aria-expanded="${!shut}"><span>${esc(g.h)} · ${g.items.reduce((a,t)=>a+cnt(t),0)}</span><i>${shut?"Show ▼":"Hide ▲"}</i></button>`:"";
+      if(shut)return head+`<div class="mini">${g.items.map(t=>`<button data-a="open" data-id="${t.id}" class="${cnt(t)?"":"gone"}" style="--fr:${t.frame||(COLORS[t.col]||COLORS.C).fr}"><b>${esc(t.name)}</b><span>×${cnt(t)}</span>${t.creature?`<em>${ptStr(t,0)}</em>`:""}${readyN(t)?`<small>${readyN(t)} ready</small>`:""}</button>`).join("")}</div>`;
+      return head+g.items.map((t,i)=>`<div class="slot${arranging?" arranging":""}">${cardHTML(t)}
+      <div class="chips">${chipsHTML(t)}</div>
+      ${arranging?`<div class="movebar">
+        <button data-a="mv" data-id="${t.id}" data-v="-1" ${i===0?"disabled":""} aria-label="Move ${esc(t.name)} earlier">◀ Earlier</button>
+        <button data-a="mv" data-id="${t.id}" data-v="1" ${i===g.items.length-1?"disabled":""} aria-label="Move ${esc(t.name)} later">Later ▶</button></div>`
+      :t.emblem?`<div class="quick e2">
+        <button data-a="rm1" data-id="${t.id}" ${cnt(t)?"":"disabled"} aria-label="Remove one ${esc(t.name)} emblem">−1</button>
+        <button class="mk" data-a="mk1" data-id="${t.id}" aria-label="Add one ${esc(t.name)} emblem">+1</button></div>`
+      :`<div class="quick">
+        ${t.creature?`<button data-a="rm1" data-id="${t.id}" data-rep ${cnt(t)?"":"disabled"} aria-label="Remove one ${esc(t.name)}">−1</button>`
+          :`<button data-a="sac1" data-id="${t.id}" data-rep ${cnt(t)?"":"disabled"} aria-label="Sacrifice one ${esc(t.name)}">Sac</button>`}
+        <button data-a="tap1" data-id="${t.id}" data-rep ${t.stacks.some(s=>!s.tapped)?"":"disabled"}>Tap</button>
+        <button class="mk" data-a="mk1" data-id="${t.id}" data-rep>+${mult()}</button>
+      </div>`}</div>`).join("")}).join("")}
+    ${arranging?"":`<button class="add" data-a="addsheet"><div><span>+</span>Add token</div></button>`}
+  </div>
+  ${saveFailed?`<div class="warnline">Your phone's browser storage is full, so changes won't survive a reload. Remove some photos, then make a backup.</div>`:""}`);
+  setHTML(document.getElementById("bar"),`<div class="in">
+    <button class="btn sm" data-a="undo" ${hist.length?"":"disabled"}>Undo</button>
+    <button class="btn pri" data-a="atkopen" ${T.ready?"":"disabled"}>Attack…</button>
+    <button class="btn" data-a="endturn">End turn</button>
+    <button class="btn" data-a="myturn">My turn</button></div>`);
+  renderSheet();
+}
+
+/* ---------- token form (custom + edit) ---------- */
+function formHTML(id,t,submit,extra=""){
+  const v=(k,d)=>t?(t[k]??d):d;
+  const cols=[["W","White"],["U","Blue"],["B","Black"],["R","Red"],["G","Green"],["C","Colorless"],["M","Multicolor"]];
+  return `<form id="${id}">
+    <label class="fld"><span>Name / creature type</span><input id="${id}-name" required maxlength="40" placeholder="Knight" value="${esc(v("name",""))}"></label>
+    <div class="f2">
+      <label class="fld"><span>Power</span><input id="${id}-p" type="number" inputmode="numeric" value="${v("p",1)??1}"></label>
+      <label class="fld"><span>Toughness</span><input id="${id}-t" type="number" inputmode="numeric" value="${v("t",1)??1}"></label>
+      <label class="fld"><span>Color</span><select id="${id}-col">${cols.map(([c,n])=>`<option value="${c}"${v("col","W")===c?" selected":""}>${n}</option>`).join("")}</select></label>
+    </div>
+    <label class="fld"><span>Abilities — type them exactly as the card says</span><textarea id="${id}-text" maxlength="300" placeholder="Flying, vigilance">${esc(v("text",""))}</textarea></label>
+    <p class="sec">Rules the app follows</p>
+    <div class="kw">${Object.keys(KWN).map(k=>`<label class="tog"><input type="checkbox" id="${id}-${k}"${t?.kw?.[k]?" checked":""}><span><b>${KWN[k]}</b>${KWD[k]}</span></label>`).join("")}</div>
+    <div class="row"><label class="chk"><input id="${id}-cre" type="checkbox"${v("creature",true)?" checked":""}> Creature</label><label class="chk"><input id="${id}-art" type="checkbox"${v("art",false)?" checked":""}> Artifact</label><label class="chk"><input id="${id}-ench" type="checkbox"${v("ench",false)?" checked":""}> Enchantment</label><label class="chk"><input id="${id}-emb" type="checkbox"${v("emblem",false)?" checked":""}> Emblem</label></div>
+    <div class="note">Emblems aren't tokens, so they can't be tapped or sacrificed, and doublers don't affect them.</div>
+    ${extra}
+    <button class="btn pri" type="submit">${submit}</button>
+  </form>`;
+}
+function readForm(id){
+  const g=k=>document.getElementById(id+"-"+k);
+  const emb=g("emb").checked,cre=g("cre").checked&&!emb,ench=g("ench").checked&&!emb,kw={};for(const k in KWN)kw[k]=g(k).checked;
+  return{name:g("name").value.trim()||"Token",p:cre?(+g("p").value||0):null,t:cre?(+g("t").value||0):null,
+    col:g("col").value,text:g("text").value.trim(),art:!emb&&(g("art").checked||(!cre&&!ench)),creature:cre,ench,emblem:emb,kw};
+}
+
+/* ---------- backup ---------- */
+/* standalone app: save files straight to the phone's Downloads */
+const DL={save:({filename,data})=>{const blob=new Blob([data],{type:"application/json"}),a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),5000);return Promise.resolve({status:"saved"})}};
+function backupJSON(photos){
+  const strip=o=>{if(!photos)delete o.img;return o};
+  const board=clone(S);board.tokens=board.tokens.map(t=>strip({...t}));
+  return JSON.stringify({app:"tokenboard",v:1,saved:new Date().toISOString(),theme:TH,board,decks:D.map(d=>({...d,tokens:d.tokens.map(t=>strip({...t}))}))});
+}
+
+
+/* ---------- Scryfall token search (needs internet) ---------- */
+const SF={items:[],timer:null,ctl:null,q:""};
+const sfImg=c=>(c.image_uris||c.card_faces?.[0]?.image_uris||{}).art_crop||"";
+const sfFace=c=>c.card_faces?.[0]&&!c.oracle_text&&c.power==null?{...c,...c.card_faces[0]}:c;
+const num=v=>{const n=parseInt(v,10);return Number.isFinite(n)?n:0};
+function fromScryfall(raw){const c=sfFace(raw),tl=c.type_line||"",emb=/Emblem/.test(tl),cre=!emb&&/Creature/.test(tl),ench=!emb&&/Enchantment/.test(tl),cols=c.colors||raw.colors||[];
+  const sub=(tl.split("—")[1]||"").trim();
+  return{name:sub||c.name.replace(/ Token$/,""),p:cre?num(c.power):null,t:cre?num(c.toughness):null,
+    col:cols.length>1?"M":cols[0]||"C",text:c.oracle_text||"",art:!emb&&(/Artifact/.test(tl)||(!cre&&!ench)),creature:cre,ench,emblem:emb,kw:kwFrom(c.oracle_text),bP:0,bT:0,img:sfImg(raw)}}
+function sfShow(html){const el=document.getElementById("sf");if(el)el.innerHTML=html}
+function sfSearch(q){
+  clearTimeout(SF.timer);SF.ctl?.abort();
+  if(q.length<2){SF.items=[];sfShow('<div class="note">Type at least 2 letters to search all official tokens.</div>');return}
+  if(!navigator.onLine){sfShow('<div class="note">You\'re offline. Scryfall search needs internet; the library above still works.</div>');return}
+  sfShow('<div class="note">Searching Scryfall…</div>');
+  SF.timer=setTimeout(async()=>{
+    SF.ctl=new AbortController();SF.q=q;
+    try{
+      const r=await fetch("https://api.scryfall.com/cards/search?unique=cards&order=name&q="+encodeURIComponent(q+" (t:token or t:emblem)"),{signal:SF.ctl.signal,headers:{Accept:"application/json"}});
+      if(SF.q!==q)return;
+      if(r.status===404){SF.items=[];sfShow('<div class="note">No official tokens match that. Make it as a custom token below.</div>');return}
+      if(!r.ok)throw new Error(r.status);
+      const j=await r.json();SF.items=(j.data||[]).slice(0,30);
+      sfShow(SF.items.map((raw,i)=>{const c=fromScryfall(raw);return `<button class="sfitem" data-a="sfpick" data-i="${i}">
+        <span class="sfart" style="background-image:url('${esc(c.img)}')"></span>
+        <span class="sfmeta"><b>${esc(c.name)}</b><small>${esc((sfFace(raw).type_line||"").replace(/^Token /,""))}${c.creature?` · ${c.p}/${c.t}`:""}</small>
+        <small class="sftext">${esc(c.text||"No abilities")}</small></span></button>`}).join("")+
+        `<div class="note">${j.total_cards>30?`Showing 30 of ${j.total_cards}. Add more words to narrow it down. `:""}Card data and images from Scryfall.</div>`);
+    }catch(e){if(e.name==="AbortError")return;sfShow('<div class="note">Couldn\'t reach Scryfall right now. Try again in a moment.</div>')}
+  },450);
+}
+let installEvt=null;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEvt=e;if(sheet?.kind==="menu")render()});
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+try{navigator.storage?.persist?.()}catch(e){}
+
+/* collapsible section inside a sheet; open state is remembered per phone */
+const sect=(k,title,hint,inner)=>`<button class="secbtn" data-a="sect" data-k="${k}" aria-expanded="${!!UI.open[k]}"><span>${title}${hint?` <small>${hint}</small>`:""}</span><i>${UI.open[k]?"−":"+"}</i></button>${UI.open[k]?`<div class="secbody">${inner}</div>`:""}`;
+
+/* ---------- decklist import via Scryfall (needs internet) ---------- */
+const IMP={busy:false,msg:"",found:[],missing:[],pick:{},name:""};
+function parseDecklist(txt){
+  const names=new Set();
+  for(let ln of txt.split(/\r?\n/)){
+    ln=ln.trim();if(!ln||/^(\/\/|#)/.test(ln))continue;
+    if(/^(deck|commander|commanders|sideboard|maybeboard|companion|about|name|tokens?)\b:?$/i.test(ln))continue;
+    ln=ln.replace(/^SB:\s*/i,"").replace(/^\d+\s*x?\s+/i,"");
+    ln=ln.replace(/\s+\*[A-Z]+\*$/,"").replace(/\s+\([A-Za-z0-9]{2,6}\)(\s+[\w★-]+)?\s*$/,"").replace(/\s+\[[^\]]*\]\s*$/,"").trim();
+    ln=ln.split(" // ")[0].split(" / ")[0].trim();
+    if(ln&&!/^\d+$/.test(ln))names.add(ln);
+  }
+  return [...names];
+}
+const pause=ms=>new Promise(r=>setTimeout(r,ms));
+async function sfCollection(ids){
+  const out=[],missing=[];
+  for(let i=0;i<ids.length;i+=75){
+    const r=await fetch("https://api.scryfall.com/cards/collection",{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify({identifiers:ids.slice(i,i+75)})});
+    if(!r.ok)throw new Error("Scryfall "+r.status);
+    const j=await r.json();out.push(...(j.data||[]));missing.push(...(j.not_found||[]));
+    await pause(120);
+  }
+  return {cards:out,missing};
+}
+const tokKey=c=>[c.name,c.p,c.t,c.col,c.text,c.emblem].join("|");
+async function runImport(){
+  const txt=document.getElementById("imp-text")?.value||"";
+  const names=parseDecklist(txt);
+  if(!names.length){IMP.msg="Paste a decklist first.";render();return}
+  if(!navigator.onLine){IMP.msg="You're offline. Importing needs internet.";render();return}
+  IMP.busy=true;IMP.msg=`Looking up ${names.length} cards on Scryfall…`;IMP.found=[];IMP.missing=[];render();
+  try{
+    const {cards,missing}=await sfCollection(names.map(n=>({name:n})));
+    IMP.missing=missing.map(m=>m.name).filter(Boolean);
+    const src=new Map();
+    for(const c of cards)for(const part of (c.all_parts||[])){
+      if(part.component!=="token"||part.id===c.id)continue;
+      if(!src.has(part.id))src.set(part.id,new Set());src.get(part.id).add(c.name);
+    }
+    if(!src.size){IMP.busy=false;IMP.msg=`Checked ${cards.length} cards. None of them are linked to tokens on Scryfall.`;render();return}
+    IMP.msg=`Found ${src.size} token printings. Getting their details…`;render();
+    const {cards:toks}=await sfCollection([...src.keys()].map(id=>({id})));
+    const merged=new Map();
+    for(const raw of toks){const t=fromScryfall(raw),k=tokKey(t);
+      if(!merged.has(k))merged.set(k,{tok:t,from:new Set()});
+      for(const n of src.get(raw.id)||[])merged.get(k).from.add(n);}
+    IMP.found=[...merged.values()].map(x=>({tok:x.tok,from:[...x.from]})).sort((a,b)=>(a.tok.emblem-b.tok.emblem)||(b.tok.creature-a.tok.creature)||a.tok.name.localeCompare(b.tok.name));
+    IMP.pick={};IMP.found.forEach((_,i)=>IMP.pick[i]=true);
+    IMP.busy=false;IMP.msg=`${IMP.found.length} different tokens and emblems from ${cards.length} cards.`;
+  }catch(e){IMP.busy=false;IMP.msg="Couldn't reach Scryfall right now. Check your connection and try again."}
+  render();
+}
+/* ---------- sheets ---------- */
+let sheet=null,pendingDel=false,pendingReset=false,pendingDeck=null,pendingRestore=false,openKey=null,pendingImg=null;
+function renderSheet(){
+  const L=document.getElementById("layer");
+  if(!sheet){L.innerHTML="";openKey=null;return}
+  const key=sheet.kind+":"+(sheet.id||"");
+  const isFresh=openKey!==key||!L.querySelector(".sheet");
+  if((sheet.kind==="add"||sheet.kind==="edit")&&!isFresh)return; // keep typed text in place
+  let body="";
+  const head=(title,btns)=>`<div class="sh"><h2>${title}</h2><div class="row">${btns}</div></div>`;
+  const done=`<button class="ghost" data-a="close">Done</button>`;
+  if(sheet.kind==="tok"){
+    const t=S.tokens.find(x=>x.id===sheet.id);if(!t){sheet=null;L.innerHTML="";openKey=null;return}
+    if(sheet.sel>=t.stacks.length)sheet.sel=Math.max(0,t.stacks.length-1);
+    const st=t.stacks[sheet.sel];
+    const label=s=>[s.tapped?"Tapped":"Untapped",t.creature&&s.sick&&!t.kw.haste?"summoning sick":"",s.c?`${sgn(s.c)}/${sgn(s.c)} counters`:"",(s.mp||s.mt)?`${sgn(s.mp||0)}/${sgn(s.mt||0)} bonus`:"",s.d?`${s.d} damage`:"",s.dt?"deathtouch":"",zeroT(t,s)?"0 toughness":lethal(t,s)||dtDead(t,s)?"lethal":""].filter(Boolean).join(" · ");
+    body=head(`${esc(t.name)} ×${cnt(t)}`,`<button class="ghost" data-a="undo" ${hist.length?"":"disabled"}>Undo</button>${done}`)+`
+    <p class="sec">Groups — tap one to select</p>
+    <div class="stacks">${t.stacks.length?t.stacks.map((s,i)=>`<button class="stk${i===sheet.sel?" sel":""}${isDead(t,s)?" dead":""}" data-a="sel" data-i="${i}">
+      <span class="n">${s.n}</span><span class="d">${label(s)}</span>${t.creature?`<span class="p">${pw(t,s)}/${tg(t,s)}</span>`:"<span></span>"}</button>`).join("")
+      :`<div class="note">None in play. Make some below.</div>`}</div>
+    <div class="amt"><span class="sec">Amount</span>
+      <div class="step"><button data-a="amt" data-v="-1" data-rep aria-label="Less">−</button><output>${sheet.amt}</output><button data-a="amt" data-v="1" data-rep aria-label="More">+</button></div>
+      ${st?`<button class="ghost" data-a="amtAll">All ${st.n}</button>`:""}</div>
+    ${st?(t.emblem?`<div class="acts"><button class="btn" data-a="op" data-op="remove">Remove ${sheet.amt}</button></div>`:`<div class="acts">
+      <button class="btn" data-a="op" data-op="tap">Tap ${sheet.amt}</button>
+      <button class="btn" data-a="op" data-op="untap">Untap ${sheet.amt}</button>
+      <button class="btn" data-a="op" data-op="sac">Sacrifice ${sheet.amt}</button>
+      <button class="btn" data-a="op" data-op="remove">Remove ${sheet.amt}</button>
+    </div>`):""}
+    <button class="btn pri" data-a="make">${t.emblem?`Add ${sheet.amt} emblem${sheet.amt>1?"s":""}`:`Make ${sheet.amt}`}${S.dbl&&!t.emblem?` → ${sheet.amt*mult()} with doublers`:""}${sheet.ec&&t.creature?` with ${sheet.ec} counter${sheet.ec>1?"s":""}`:""}</button>
+    ${t.creature?sect("ctr","Counters & bonuses",sheet.ec?`new ones enter with ${sheet.ec}`:"",`
+      ${st?`<div class="acts">
+        <button class="btn" data-a="op" data-op="plus">+1/+1 on ${sheet.amt}</button>
+        <button class="btn" data-a="op" data-op="minus">−1/−1 on ${sheet.amt}</button></div>
+      <div class="bonusrow"><span class="sec">Other bonus each · equipment, +1/+0 counters</span>
+        <div class="pr"><i>P</i><div class="step"><button data-a="bon" data-k="bp" data-v="-1" data-rep aria-label="Lower power bonus">−</button><output class="${sheet.bp?"on":""}">${sgn(sheet.bp)}</output><button data-a="bon" data-k="bp" data-v="1" data-rep aria-label="Raise power bonus">+</button></div></div>
+        <div class="pr"><i>T</i><div class="step"><button data-a="bon" data-k="bt" data-v="-1" data-rep aria-label="Lower toughness bonus">−</button><output class="${sheet.bt?"on":""}">${sgn(sheet.bt)}</output><button data-a="bon" data-k="bt" data-v="1" data-rep aria-label="Raise toughness bonus">+</button></div></div>
+        <button class="btn" data-a="op" data-op="bonus" ${sheet.bp||sheet.bt?"":"disabled"}>Give ${sgn(sheet.bp)}/${sgn(sheet.bt)} to ${sheet.amt}</button></div>`:""}
+      <div class="amt"><span class="sec">New tokens enter with</span>
+        <div class="step"><button data-a="ecamt" data-v="-1" data-rep aria-label="Fewer counters">−</button><output class="${sheet.ec?"on":""}">${sheet.ec}</output><button data-a="ecamt" data-v="1" data-rep aria-label="More counters">+</button></div>
+        <span class="note">+1/+1 counters each</span></div>`):""}
+    ${t.creature&&st?sect("dmg","Damage",t.stacks.some(s=>s.d)?"some damage marked":"",`
+      <div class="dmgrow"><span class="sec">Damage each</span>
+        <div class="step"><button data-a="dmgamt" data-v="-1" data-rep aria-label="Less damage">−</button><output>${sheet.dmg}</output><button data-a="dmgamt" data-v="1" data-rep aria-label="More damage">+</button></div>
+        <button class="btn" data-a="op" data-op="dmg">Deal ${sheet.dmg} to ${sheet.amt}</button>
+        <button class="ghost${sheet.dt?" on":""}" data-a="dttog" aria-pressed="${!!sheet.dt}">Deathtouch source: ${sheet.dt?"on":"off"}</button></div>`):""}
+    ${t.creature?sect("lord",`Type buff · only ${esc(t.name)}`,(t.bP||t.bT)?`${sgn(t.bP||0)}/${sgn(t.bT||0)}`:"",`
+      <div class="mod">
+      <div class="pr"><i>P</i><div class="step"><button data-a="tmod" data-k="bP" data-v="-1" data-rep aria-label="Lower type power">−</button><output class="${t.bP?"on":""}">${sgn(t.bP||0)}</output><button data-a="tmod" data-k="bP" data-v="1" data-rep aria-label="Raise type power">+</button></div></div>
+      <div class="pr"><i>T</i><div class="step"><button data-a="tmod" data-k="bT" data-v="-1" data-rep aria-label="Lower type toughness">−</button><output class="${t.bT?"on":""}">${sgn(t.bT||0)}</output><button data-a="tmod" data-k="bT" data-v="1" data-rep aria-label="Raise type toughness">+</button></div></div></div>
+      <div class="note">For lords and effects that pump only this kind of token.</div>`):""}
+    ${sect("look","Card look",[t.frame?"custom frame":"",t.img?"photo":""].filter(Boolean).join(", "),`
+      <span class="sec">Frame color</span>
+      <div class="frames">${FRAMES.map(c=>`<button data-a="frame" data-v="${c}" class="${(t.frame||"").toLowerCase()===c?"on":""}" style="background:${c}" aria-label="Frame color ${c}"></button>`).join("")}</div>
+      <div class="pick"><label class="chk">Any color <input id="frame-pick" type="color" value="${t.frame||(COLORS[t.col]||COLORS.C).fr}"></label>
+        ${t.frame?`<button class="ghost" data-a="framereset">Use ${CNAME[t.col]||"mana"} color</button>`:""}</div>
+      <span class="sec">Card image</span>
+      <div class="thumb"><div class="pv" style="background:${artBg(t)}"></div>
+        <div class="row"><label class="ghost filebtn">${t.img?"Change photo":"Add photo"}<input id="tok-img" type="file" accept="image/*"></label>
+        ${t.img?`<button class="ghost" data-a="rmimg">Remove photo</button>`:""}</div></div>
+      <input id="tok-paste" class="pastebox" placeholder="Or long-press here and paste a copied image" aria-label="Paste an image">`)}
+    ${sect("card","Edit, copy or remove","",`
+      <div class="acts"><button class="btn" data-a="edit">Edit card</button><button class="btn" data-a="dup">Copy as new type</button></div>
+      <button class="ghost${pendingDel?" warn":""}" data-a="deltype">${pendingDel?"Tap again to remove this token type":"Remove token type"}</button>`)}`;
+  } else if(sheet.kind==="edit"){
+    const t=S.tokens.find(x=>x.id===sheet.id);if(!t){sheet=null;L.innerHTML="";openKey=null;return}
+    body=head(`Edit ${esc(t.name)}`,`<button class="ghost" data-a="editback">Cancel</button>`)+`
+    ${formHTML("ef",t,"Save changes")}
+    <div class="note">Changes apply to all ${cnt(t)} in play. Counters and tapped state are kept.</div>`;
+  } else if(sheet.kind==="atk"){
+    const rows=S.tokens.filter(t=>readyN(t)>0);
+    let n=0,p=0;
+    for(const t of rows)for(const {s,k} of pick(t,sheet.n[t.id]||0)){n+=k;p+=k*dmgOf(t,s)}
+    body=head("Declare attackers",`<button class="ghost" data-a="close">Cancel</button>`)+`
+    <div class="row"><button class="ghost" data-a="atkall">All ready</button><button class="ghost" data-a="atknone">None</button></div>
+    <div class="stacks">${rows.map(t=>{const r=readyN(t),v=sheet.n[t.id]||0;
+      return `<div class="arow"><div class="who"><b>${esc(t.name)}</b><small>${r} ready · ${ptStr(t,0)}${t.kw.vig?" · vigilance":""}</small></div>
+      <div class="step"><button data-a="atkset" data-id="${t.id}" data-v="-1" data-rep aria-label="Fewer ${esc(t.name)}">−</button><output>${v}</output><button data-a="atkset" data-id="${t.id}" data-v="1" data-rep aria-label="More ${esc(t.name)}">+</button><button class="ghost" data-a="atkmax" data-id="${t.id}">All</button></div></div>`}).join("")}</div>
+    <div class="dmg"><span class="sec">Total damage</span><b>${p}</b></div>
+    <button class="btn pri" data-a="atkgo" ${n?"":"disabled"}>Attack with ${n}</button>
+    <div class="note">Strongest tokens attack first. Vigilance tokens stay untapped.</div>`;
+  } else if(sheet.kind==="blk"){
+    const A=S.lastAtk;if(!A?.att){sheet=null;L.innerHTML="";openKey=null;return}
+    body=head("Mark blocked attackers",done)+`
+    <div class="stacks">${A.att.map((g,i)=>`<div class="arow"><div class="who"><b>${esc(g.name)}${g.c?` (${sgn(g.c)}/${sgn(g.c)})`:""}${g.mp||g.mt?` (${sgn(g.mp)}/${sgn(g.mt)} bonus)`:""}${g.tr?" · trample":""}</b><small>${g.k} attacking · ${g.p} power each</small></div>
+      <div class="step"><button data-a="blkset" data-i="${i}" data-v="-1" data-rep aria-label="Fewer blocked">−</button><output>${A.bl[i]||0}</output><button data-a="blkset" data-i="${i}" data-v="1" data-rep aria-label="More blocked">+</button></div>
+      ${g.tr&&(A.bl[i]||0)?(g.dth?`<div class="trow">Trample + deathtouch: 1 to each blocker, <b>${throughEach(A,i)}</b> through each</div>`
+        :`<div class="trow"><span>Trample · blocker toughness left</span><div class="step"><button data-a="blkbt" data-i="${i}" data-v="-1" data-rep aria-label="Lower blocker toughness">−</button><output>${A.bt?.[i]??1}</output><button data-a="blkbt" data-i="${i}" data-v="1" data-rep aria-label="Raise blocker toughness">+</button></div><span><b>${throughEach(A,i)}</b> through each</span></div>`):""}</div>`).join("")}</div>
+    <div class="trow"><span>Other damage through · double blocks, effects</span><div class="step"><button data-a="blkx" data-v="-1" data-rep aria-label="Less extra damage">−</button><output>${sgn(A.x||0)}</output><button data-a="blkx" data-v="1" data-rep aria-label="More extra damage">+</button></div></div>
+    <div class="dmg"><span class="sec">Damage to player</span><b>${atkDamage(A)}</b></div>
+    <div class="note">Of ${A.p} total, ${A.p-atkDamage(A)} is stopped by blockers. To mark damage the blockers deal back, open the token's card.</div>`;
+  } else if(sheet.kind==="life"){
+    const diff=S.life-S.start;
+    body=head("Life",done)+`
+    <div class="lifebig">${S.life}</div>
+    <div class="lifebtns">${[-10,-5,-1,1,5,10].map(v=>`<button class="btn${v>0?" up":" down"}" data-a="life" data-v="${v}" data-rep aria-label="${v>0?"Gain":"Lose"} ${Math.abs(v)} life">${v>0?"+":"−"}${Math.abs(v)}</button>`).join("")}</div>
+    <form id="lf" class="deckform"><input id="life-in" type="number" inputmode="numeric" placeholder="Set life to…" aria-label="Set life total"><button class="btn pri" type="submit">Set</button></form>
+    <div class="note">Started at ${S.start}${diff?` · ${diff>0?"up":"down"} ${Math.abs(diff)} this game`:""}. Hold a button to repeat it.</div>`;
+  } else if(sheet.kind==="menu"){
+    body=head("Menu",done)+`
+    <div class="menu">
+      <button data-a="decks"><b>Deck presets</b><span>${D.length?plural(D.length,D.length>1?"saved decks":"saved deck"):"Save this board's tokens to load next game"}</span></button>
+      <button data-a="logsheet"><b>Game log</b><span>${S.log.length?`${S.log.length} entries this game`:"Nothing yet"}</span></button>
+      <button data-a="colors"><b>Colors</b><span>${THEMES[TH.name].label} theme${TH.accent?" · custom accent":""}</span></button>
+      ${installEvt?`<button data-a="install"><b>Install app</b><span>Add Token Board to your app drawer</span></button>`:""}
+      <button data-a="backup"><b>Backup & restore</b><span>Keep a copy of your board and decks</span></button>
+    </div>
+    <p class="sec">Starting life</p>
+    <div class="seg">${[20,25,30,40].map(v=>`<button data-a="startlife" data-v="${v}" class="${S.start===v?"on":""}">${v}</button>`).join("")}</div>
+    <button class="btn${pendingReset?" warnbtn":""}" data-a="reset">${pendingReset?"Tap again: clear the board":"New game"}</button>
+    <div class="note">New game clears tokens, buffs and the log, and sets life to ${S.start}. Saved decks stay.</div>`;
+  } else if(sheet.kind==="decks"){
+    body=head("Deck presets",`<button class="ghost" data-a="menu">Back</button>${done}`)+`
+    <button class="btn pri" data-a="impopen">Import tokens from a decklist</button>
+    <div class="note">Paste a list exported from Moxfield, Archidekt or any site. The app finds every token and emblem the deck makes.</div>
+    <p class="sec">Or save the current board</p>
+    <form id="df" class="deckform"><input id="deck-name" maxlength="40" placeholder="Deck name, e.g. Krenko" required aria-label="Deck name">
+      <button class="btn" type="submit" ${S.tokens.length?"":"disabled"}>Save board</button></form>
+    <div class="note">Saves the token types on the board now (stats, abilities, photos), not the counts.</div>
+    <div class="stacks">${D.length?D.map(d=>`<div class="arow"><div class="who"><b>${esc(d.name)}</b><small>${esc(d.tokens.map(t=>t.name).join(", "))}</small></div>
+      <div class="row"><button class="ghost" data-a="deckload" data-id="${d.id}">Load</button><button class="ghost${pendingDeck===d.id?" warn":""}" data-a="deckdel" data-id="${d.id}">${pendingDeck===d.id?"Tap again":"Delete"}</button></div></div>`).join("")
+      :`<div class="note">No decks yet. Set up a board, then save it here.</div>`}</div>
+    ${D.length?`<div class="note">Load starts a new game with that deck's tokens at 0. Undo brings back the old board.</div>`:""}`;
+  } else if(sheet.kind==="imp"){
+    const n=Object.values(IMP.pick).filter(Boolean).length;
+    body=head("Import from decklist",`<button class="ghost" data-a="decks">Back</button>${done}`)+`
+    <label class="fld"><span>Decklist</span><textarea id="imp-text" class="mono" placeholder="1 Grave Titan
+1 Elspeth, Storm Slayer
+1 Chatterfang, Squirrel General" ${IMP.busy?"disabled":""}></textarea></label>
+    <button class="btn pri" data-a="impgo" ${IMP.busy?"disabled":""}>${IMP.busy?"Searching…":"Find tokens"}</button>
+    ${IMP.msg?`<div class="note">${esc(IMP.msg)}</div>`:""}
+    ${IMP.found.length?`<div class="row"><button class="ghost" data-a="impall">Select all</button><button class="ghost" data-a="impnone">Select none</button></div>
+    <div class="sfres">${IMP.found.map((f,i)=>`<button class="sfitem imp${IMP.pick[i]?" on":""}" data-a="imptog" data-i="${i}" aria-pressed="${!!IMP.pick[i]}">
+      <span class="sfart" style="background-image:url('${esc(f.tok.img)}')"></span>
+      <span class="sfmeta"><b>${IMP.pick[i]?"✓ ":""}${esc(f.tok.name)}${f.tok.emblem?" emblem":""}</b><small>${esc(typeLine(f.tok).replace(/^Token /,""))}${f.tok.creature?` · ${f.tok.p}/${f.tok.t}`:""}</small>
+      <small class="sftext">From ${esc(f.from.slice(0,3).join(", "))}${f.from.length>3?` +${f.from.length-3} more`:""}</small></span></button>`).join("")}</div>
+    <form id="impf" class="deckform"><input id="imp-name" maxlength="40" placeholder="Deck name" required aria-label="Deck name"><button class="btn pri" type="submit" ${n?"":"disabled"}>Save ${n}</button></form>
+    <div class="note">Not found: cards that copy other tokens (like Populate) or describe tokens only in their rules text. Add those by hand.${IMP.missing.length?` Couldn't find ${IMP.missing.length} card name${IMP.missing.length>1?"s":""}: ${esc(IMP.missing.slice(0,5).join(", "))}${IMP.missing.length>5?"…":""}.`:""} Card data from Scryfall.</div>`:""}`;
+  } else if(sheet.kind==="colors"){
+    const acc=TH.accent||THEMES[TH.name].v.brass;
+    body=head("Colors",`<button class="ghost" data-a="menu">Back</button>${done}`)+`
+    ${[["mana","Mana"],["guild","Guilds"],["other","Other"]].map(([gk,gl])=>`<p class="sec">${gl}</p>
+    <div class="themes">${Object.entries(THEMES).filter(([k,th])=>(th.g||"mana")===gk).map(([k,th])=>`<button class="theme${TH.name===k?" on":""}" data-a="theme" data-v="${k}">
+      <span class="sw"><i style="background:${th.v.felt}"></i><i style="background:${th.v["felt-3"]}"></i><i style="background:${th.v.ink}"></i><i style="background:${th.v.brass}"></i></span>
+      <b>${th.label}</b><span>${th.note}</span></button>`).join("")}</div>`).join("")}
+    <p class="sec">Accent · buttons, highlights, totals</p>
+    <div class="swatches">${ACCENTS.map(c=>`<button data-a="accent" data-v="${c}" class="${acc.toLowerCase()===c?"on":""}" style="background:${c}" aria-label="Accent ${c}"></button>`).join("")}</div>
+    <div class="pick"><label class="chk">Any color <input id="acc-pick" type="color" value="${acc}"></label>
+      ${TH.accent?`<button class="ghost" data-a="accentreset">Use theme accent</button>`:""}</div>
+    <div class="note">Colors are saved on this phone and stay the same across new games. Card frames keep their mana colors.</div>`;
+  } else if(sheet.kind==="log"){
+    body=head("Game log",`<button class="ghost" data-a="menu">Back</button>${done}`)+`
+    <ol class="loglist">${S.log.length?[...S.log].reverse().map(e=>`<li><span>${esc(e.m)}</span><time>${esc(e.ts)}</time></li>`).join(""):`<li class="note">Nothing yet this game.</li>`}</ol>
+    <div class="note">Undo also removes the matching log line.</div>`;
+  } else if(sheet.kind==="backup"){
+    body=head("Backup & restore",`<button class="ghost" data-a="menu">Back</button>${done}`)+`
+    <label class="chk"><input id="bk-photos" type="checkbox"${sheet.photos?" checked":""} data-a="bkphotos"> Include photos (bigger backup)</label>
+    <div class="acts">
+      ${DL?`<button class="btn pri" data-a="bksave">Save backup file</button>`:""}
+      <button class="btn${DL?"":" pri"}" data-a="bkcopy">Copy backup text</button>
+    </div>
+    ${sheet.msg?`<div class="note">${esc(sheet.msg)}</div>`:""}
+    ${sheet.show?`<textarea id="bk-out" readonly class="mono">${esc(backupJSON(sheet.photos))}</textarea>`:""}
+    <p class="sec">Restore</p>
+    <div class="row"><label class="ghost filebtn">Open backup file<input id="bk-file" type="file" accept=".json,.txt,application/json,text/plain"></label></div>
+    <textarea id="bk-in" class="mono" placeholder="Or paste backup text here"></textarea>
+    <button class="btn${pendingRestore?" warnbtn":""}" data-a="bkrestore">${pendingRestore?"Tap again: replace board and decks":"Restore"}</button>
+    ${sheet.err?`<div class="warnline">${esc(sheet.err)}</div>`:""}`;
+  } else {
+    body=head("Add a token",`<button class="ghost" data-a="close">Cancel</button>`)+`
+    <label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+      <input id="q" type="search" placeholder="Search tokens or emblems: soldier, elspeth…" autocomplete="off" aria-label="Search tokens"></label>
+    <p class="sec">Token library</p>
+    <div class="note" id="nomatch" hidden>No match. Make it as a custom token below.</div>
+    <div class="preset">${PRESETS.map((p,i)=>`<button data-a="preset" data-i="${i}" data-k="${esc((p.name+" "+(p.creature?p.p+"/"+p.t:"artifact")+" "+p.text+" "+{W:"white",U:"blue",B:"black",R:"red",G:"green",C:"colorless artifact"}[p.col]).toLowerCase())}" style="--fr:${COLORS[p.col].fr}"><span class="pip"></span><span style="flex:1">${esc(p.name)}</span><span class="s">${p.creature?p.p+"/"+p.t:"—"}</span></button>`).join("")}</div>
+    <p class="sec">Every printed token and emblem · Scryfall</p>
+    <div id="sf" class="sfres"><div class="note">Type in the search box above to search all official tokens, with their real art and exact text.</div></div>
+    <p class="sec">Custom token</p>
+    ${formHTML("cf",null,"Add to board",`<div class="thumb"><div class="pv" id="cf-pv"></div><label class="ghost filebtn">Add photo (optional)<input id="cf-img" type="file" accept="image/*"></label></div>
+      <input id="cf-paste" class="pastebox" placeholder="Or long-press here and paste a copied image" aria-label="Paste an image">`)}`;
+  }
+  if(isFresh){
+    if(sheet.kind!=="tok")pendingImg=null;
+    const stay=openKey&&(openKey.split(":")[0]!=="add")&&!["atk"].includes(sheet.kind)&&L.querySelector(".sheet");
+    L.innerHTML=`<div class="scrim" data-a="close"></div><div class="sheet${stay?"":" anim"}" role="dialog" aria-modal="true"><div class="in"></div></div>`;
+    openKey=key;
+  }
+  setHTML(L.querySelector(".sheet .in"),body);
+}
+function applyOp(t,op){
+  const s=t.stacks[sheet.sel];if(!s)return;
+  const n=Math.min(sheet.amt,s.n);
+  if(op==="sac"){sac(t,s,n);sheet.sel=0;sheet.amt=1;logAdd("sac"+t.id,n,"Sacrificed",t.name);return}
+  s.n-=n;
+  let tgt=null;
+  if(op!=="remove"){tgt={...s,n};
+    if(op==="tap")tgt.tapped=true;if(op==="untap")tgt.tapped=false;
+    if(op==="bonus"){tgt.mp=(tgt.mp||0)+sheet.bp;tgt.mt=(tgt.mt||0)+sheet.bt}if(op==="plus")tgt.c+=1;if(op==="minus")tgt.c-=1;if(op==="dmg"){tgt.d=(tgt.d||0)+sheet.dmg;if(sheet.dt)tgt.dt=true}
+    t.stacks.push(tgt);}
+  merge(t);
+  sheet.sel=tgt?Math.max(0,t.stacks.findIndex(x=>skey(x)===skey(tgt))):0;
+  sheet.amt=1;S.example=false;
+  log({tap:`Tapped ${n} ${t.name}`,untap:`Untapped ${n} ${t.name}`,plus:`+1/+1 counter on ${n} ${t.name}`,bonus:`${sgn(sheet.bp)}/${sgn(sheet.bt)} bonus on ${n} ${t.name}`,minus:`−1/−1 counter on ${n} ${t.name}`,dmg:`${sheet.dmg}${sheet.dt?" deathtouch":""} damage to ${n} ${t.name}`,remove:`Removed ${n} ${t.name} (exiled, bounced or other)`}[op]);
+}
+
+/* actions that only change what's on screen, not the board */
+const VIEW=new Set(["impopen","impgo","imptog","impall","impnone","lifesheet","grp","buffs","sect","arrange","open","addsheet","close","sel","amt","amtAll","undo","atkopen","atkset","atkmax","atkall","atknone","edit","editback","menu","decks","logsheet","backup","bkcopy","bksave","bkphotos","deckdel","colors","theme","accent","accentreset","dmgamt","dttog","blkopen","bon","ecamt","install"]);
+function act(ds,held){
+  const a=ds.a,t=S.tokens.find(x=>x.id===ds.id);
+  if(!held&&!VIEW.has(a)&&!(a==="reset"&&!pendingReset)&&!(a==="deltype"&&!pendingDel)&&!(a==="bkrestore"&&!pendingRestore))snap();
+  if(a!=="reset")pendingReset=false;
+  if(a!=="deltype")pendingDel=false;
+  if(a!=="deckdel")pendingDeck=null;
+  if(a!=="bkrestore")pendingRestore=false;
+  const tok=()=>S.tokens.find(x=>x.id===sheet?.id);
+  switch(a){
+    case"mod":{const k=ds.k;S[k]=Math.max(-20,Math.min(30,S[k]+ +ds.v));
+      const anth=k[0]==="a";log(`${anth?"Anthem":"Until end of turn"} ${sgn(anth?S.aP:S.eP)}/${sgn(anth?S.aT:S.eT)}`,anth?"anth":"eot");break}
+    case"tmod":{const tk=tok();tk[ds.k]=Math.max(-20,Math.min(30,(tk[ds.k]||0)+ +ds.v));log(`${tk.name} type buff ${sgn(tk.bP)}/${sgn(tk.bT)}`,"tb"+tk.id);break}
+    case"life":{const last=S.log[S.log.length-1];const from=last?.k==="life"?last.from:S.life;S.life+= +ds.v;
+      log(`Life ${from} → ${S.life}`,"life");S.log[S.log.length-1].from=from;break}
+    case"dbl":S.dbl=Math.max(0,Math.min(5,S.dbl+ +ds.v));log(`Doublers ×${mult()}`,"dbl");break;
+    case"reset":if(pendingReset){S=fresh(S.start);pendingReset=false;sheet=null}else pendingReset=true;break;
+    case"startlife":S.start=+ds.v;break;
+    case"undo":if(hist.length){S=hist.pop();if(sheet&&["atk"].includes(sheet.kind))sheet=null}break;
+    case"mk1":create(t,1);break;
+    case"rm1":{const s=[...t.stacks].reverse().find(x=>x.sick)||[...t.stacks].reverse().find(x=>!x.tapped)||t.stacks[t.stacks.length-1];if(s){s.n--;merge(t);logAdd("rm"+t.id,1,"Removed",t.name)}break}
+    case"tap1":{const s=readyOf(t)[0]||t.stacks.find(x=>!x.tapped);if(s){s.n--;t.stacks.push({...s,n:1,tapped:true});merge(t);logAdd("tp"+t.id,1,"Tapped",t.name)}break}
+    case"cleandead":{const parts=[];for(const tk of S.tokens){let k=0;for(const s of tk.stacks)if(isDead(tk,s)){k+=s.n;S.turn.d+=s.n;s.n=0}if(k)parts.push(`${k} ${tk.name}`);tk.stacks.forEach(s=>{s.dt=false});merge(tk)}log(`Clean up: ${parts.join(", ")} died`);break}
+    case"atkopen":{sheet={kind:"atk",n:{}};for(const tk of S.tokens){const r=readyN(tk);if(r)sheet.n[tk.id]=r}break}
+    case"atkset":{const r=readyN(t);sheet.n[t.id]=Math.max(0,Math.min(r,(sheet.n[t.id]||0)+ +ds.v));break}
+    case"atkmax":sheet.n[t.id]=readyN(t);break;
+    case"atkall":for(const tk of S.tokens)sheet.n[tk.id]=readyN(tk);break;
+    case"atknone":sheet.n={};break;
+    case"atkgo":{let n=0,p=0;const att=[];
+      for(const tk of S.tokens){for(const {s,k} of pick(tk,sheet.n[tk.id]||0)){const each=dmgOf(tk,s);n+=k;p+=k*each;att.push({id:tk.id,name:tk.name,k,p:each,c:s.c,mp:s.mp||0,mt:s.mt||0,tr:!!tk.kw.tr,dth:!!tk.kw.dth});if(!tk.kw.vig){s.n-=k;tk.stacks.push({...s,n:k,tapped:true})}}merge(tk)}
+      S.lastAtk={n,p,att,bl:{},bt:{},x:0};log(`Attacked with ${n} for ${p}`);sheet=null;break}
+    case"endturn":for(const tk of S.tokens){tk.stacks.forEach(s=>{s.d=0;s.dt=false});merge(tk)}S.lastAtk=null;S.eP=0;S.eT=0;S.turn={e:0,d:0,s:0};log("End of turn: damage removed, pumps ended");break;
+    case"myturn":for(const tk of S.tokens){tk.stacks.forEach(s=>{s.tapped=false;s.sick=false});merge(tk)}S.lastAtk=null;log("My turn: untapped all, summoning sickness gone");break;
+    case"open":sheet={kind:"tok",id:ds.id,sel:0,amt:1,dmg:1,bp:0,bt:0,ec:0};break;
+    case"sac1":{const st=t.stacks.find(x=>!x.tapped)||t.stacks[0];if(sac(t,st,1))logAdd("sac"+t.id,1,"Sacrificed",t.name);break}
+    case"blkopen":sheet={kind:"blk"};break;
+    case"blkbt":{const A=S.lastAtk,i=+ds.i;A.bt??={};A.bt[i]=Math.max(0,Math.min(50,(A.bt[i]??1)+ +ds.v));log(`${blockedN(A)} blocked · ${atkDamage(A)} damage gets through`,"blk");break}
+    case"blkx":{const A=S.lastAtk;A.x=Math.max(-99,Math.min(99,(A.x||0)+ +ds.v));log(`${blockedN(A)} blocked · ${atkDamage(A)} damage gets through`,"blk");break}
+    case"bon":sheet[ds.k]=Math.max(-20,Math.min(20,(sheet[ds.k]||0)+ +ds.v));break;
+    case"ecamt":sheet.ec=Math.max(0,Math.min(20,(sheet.ec||0)+ +ds.v));break;
+    case"install":if(installEvt){installEvt.prompt();installEvt.userChoice.finally(()=>{installEvt=null;render()})}break;
+    case"sfpick":{const c=SF.items[+ds.i];if(!c)break;const tk={...fromScryfall(c),id:nid(),stacks:[]};S.tokens.push(tk);S.example=false;
+      log(`Added ${tk.name} from Scryfall`);sheet={kind:"tok",id:tk.id,sel:0,amt:1,dmg:1,bp:0,bt:0,ec:0};break}
+    case"blkset":{const A=S.lastAtk,i=+ds.i;A.bl[i]=Math.max(0,Math.min(A.att[i].k,(A.bl[i]||0)+ +ds.v));
+      log(`${blockedN(A)} blocked · ${atkDamage(A)} damage gets through`,"blk");break}
+    case"dttog":sheet.dt=!sheet.dt;break;
+    case"dmgamt":sheet.dmg=Math.max(1,Math.min(99,(sheet.dmg||1)+ +ds.v));break;
+    case"edit":sheet={kind:"edit",id:sheet.id};break;
+    case"editback":sheet={kind:"tok",id:sheet.id,sel:0,amt:1,dmg:1,bp:0,bt:0,ec:0};break;
+    case"impopen":sheet={kind:"imp"};break;
+    case"impgo":if(!IMP.busy)runImport();return false;
+    case"imptog":IMP.pick[+ds.i]=!IMP.pick[+ds.i];break;
+    case"impall":IMP.found.forEach((_,i)=>IMP.pick[i]=true);break;
+    case"impnone":IMP.pick={};break;
+    case"lifesheet":sheet={kind:"life"};break;
+    case"flag":S[ds.k]=!S[ds.k];log(`${ds.k==="tough"?"Combat damage uses toughness":"Defenders can attack"}: ${S[ds.k]?"on":"off"}`);break;
+    case"grp":UI.collapsed[ds.k]=!UI.collapsed[ds.k];saveUI();break;
+    case"buffs":UI.buffs=!UI.buffs;saveUI();break;
+    case"sect":UI.open[ds.k]=!UI.open[ds.k];saveUI();break;
+    case"arrange":arranging=!arranging;if(arranging)sheet=null;break;
+    case"mv":if(!moveTok(ds.id,+ds.v))hist.pop();break;
+    case"frame":{const tk=tok();if(tk)tk.frame=ds.v;break}
+    case"framereset":{const tk=tok();if(tk)delete tk.frame;break}
+    case"dup":{const tk=tok(),c=newTok(tk);S.tokens.splice(S.tokens.indexOf(tk)+1,0,c);log(`Copied ${tk.name} as a new type`);sheet={kind:"tok",id:c.id,sel:0,amt:1,dmg:1,bp:0,bt:0,ec:0};break}
+    case"addsheet":sheet={kind:"add"};break;
+    case"menu":sheet={kind:"menu"};break;
+    case"decks":sheet={kind:"decks"};break;
+    case"logsheet":sheet={kind:"log"};break;
+    case"backup":sheet={kind:"backup",photos:true};break;
+    case"colors":sheet={kind:"colors"};break;
+    case"theme":TH.name=ds.v;TH.accent=null;applyTheme();break;
+    case"accent":TH.accent=ds.v;applyTheme();break;
+    case"accentreset":TH.accent=null;applyTheme();break;
+    case"close":sheet=null;break;
+    case"sel":sheet.sel=+ds.i;sheet.amt=1;break;
+    case"amt":sheet.amt=Math.max(1,Math.min(999,sheet.amt+ +ds.v));break;
+    case"amtAll":sheet.amt=tok().stacks[sheet.sel].n;break;
+    case"op":applyOp(tok(),ds.op);break;
+    case"make":create(tok(),sheet.amt,sheet.ec||0);sheet.amt=1;break;
+    case"deltype":if(pendingDel){const tk=tok();S.tokens=S.tokens.filter(x=>x.id!==sheet.id);log(`Removed ${tk.name} from the board`);sheet=null;pendingDel=false}else pendingDel=true;break;
+    case"rmimg":{const tk=tok();if(tk)delete tk.img;break}
+    case"preset":{const tk=newTok(PRESETS[+ds.i]);S.tokens.push(tk);S.example=false;sheet={kind:"tok",id:tk.id,sel:0,amt:1,dmg:1,bp:0,bt:0,ec:0};break}
+    case"deckload":{const d=D.find(x=>x.id===ds.id);if(!d)break;S={...fresh(S.start),tokens:d.tokens.map(newTok)};log(`Loaded deck ${d.name}`);sheet=null;break}
+    case"deckdel":if(pendingDeck===ds.id){D=D.filter(x=>x.id!==ds.id);pendingDeck=null}else pendingDeck=ds.id;break;
+    case"bkphotos":sheet.photos=document.getElementById("bk-photos").checked;sheet.show=false;sheet.msg="";break;
+    case"bkcopy":{const txt=backupJSON(sheet.photos);
+      if(navigator.clipboard?.writeText){navigator.clipboard.writeText(txt).then(()=>{sheet.msg=`Copied ${Math.round(txt.length/1024)} KB. Paste it into a note or email to yourself.`;sheet.show=false;render()},()=>{sheet.show=true;sheet.msg="Copy was blocked. Select all the text below and copy it.";render()})}
+      else{sheet.show=true;sheet.msg="Select all the text below and copy it."}
+      break}
+    case"bksave":{const txt=backupJSON(sheet.photos),d=new Date();
+      DL.save({filename:`token-board-backup-${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}.json`,data:txt})
+        .then(()=>{sheet.msg="Backup saved to your Downloads folder.";render()})
+        .catch(err=>{sheet.msg=err?.code==="declined"?"Save cancelled.":"Saving a file isn't available here. Use Copy backup text instead.";if(err?.code&&err.code!=="declined"&&err.code!=="rate_limited")DL=null;render()});
+      break}
+    case"bkrestore":{
+      if(!pendingRestore){const raw=document.getElementById("bk-in").value.trim();if(!raw){sheet.err="Paste backup text or open a backup file first.";break}sheet.err="";pendingRestore=true;break}
+      pendingRestore=false;
+      try{const o=JSON.parse(document.getElementById("bk-in").value.trim());
+        if(o.app!=="tokenboard"||!o.board||!Array.isArray(o.board.tokens))throw 0;
+        S=norm(o.board);D=Array.isArray(o.decks)?o.decks:[];if(o.theme&&THEMES[o.theme.name]){TH={name:o.theme.name,accent:o.theme.accent||null};applyTheme()}log("Restored from backup");sheet=null;
+      }catch(e){hist.pop();sheet.err="That text isn't a Token Board backup. Make sure you copied all of it."}
+      break}
+    default:return false;
+  }
+  return true;
+}
+let rep=null,swallow=false;
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-a]");if(!b||b.disabled)return;
+  if(swallow){swallow=false;return}
+  if(b.dataset.a==="bkphotos"){act({...b.dataset});render();return}
+  if(act({...b.dataset}))render();
+});
+/* hold a button to repeat it */
+document.addEventListener("pointerdown",e=>{
+  swallow=false;
+  const b=e.target.closest("[data-rep]");if(!b||b.disabled)return;
+  const ds={...b.dataset};let started=false;
+  const tick=()=>{if(!started){started=true;snap()}act(ds,true);render();swallow=true;rep=setTimeout(tick,85)};
+  rep=setTimeout(tick,420);
+});
+const stopRep=()=>{if(rep){clearTimeout(rep);rep=null}};
+["pointerup","pointercancel","scroll"].forEach(ev=>document.addEventListener(ev,stopRep,true));
+document.addEventListener("contextmenu",e=>{if(e.target.closest("[data-rep]"))e.preventDefault()});
+
+document.addEventListener("submit",e=>{
+  e.preventDefault();
+  const id=e.target.id;
+  if(id==="impf"){const name=document.getElementById("imp-name").value.trim();
+    const toks=IMP.found.filter((_,i)=>IMP.pick[i]).map(f=>typeOf({...f.tok}));if(!name||!toks.length)return;
+    const ex=D.find(d=>d.name.toLowerCase()===name.toLowerCase());const deck={id:ex?.id||nid(),name,tokens:toks};
+    if(ex)D[D.indexOf(ex)]=deck;else D.push(deck);
+    IMP.found=[];IMP.pick={};IMP.msg=`Saved "${name}" with ${toks.length} tokens. Load it from Deck presets.`;
+    sheet={kind:"decks"};render();return}
+  if(id==="df"){const name=document.getElementById("deck-name").value.trim();if(!name||!S.tokens.length)return;
+    const ex=D.find(d=>d.name.toLowerCase()===name.toLowerCase());
+    const deck={id:ex?.id||nid(),name,tokens:S.tokens.map(typeOf)};
+    if(ex)D[D.indexOf(ex)]=deck;else D.push(deck);
+    document.getElementById("deck-name").value="";render();return}
+  if(id==="lf"){const el=document.getElementById("life-in"),n=parseInt(el.value,10);if(!Number.isFinite(n))return;
+    snap();const last=S.log[S.log.length-1];const from=last?.k==="life"?last.from:S.life;S.life=n;
+    log(`Life ${from} → ${S.life}`,"life");S.log[S.log.length-1].from=from;el.value="";el.blur();render();return}
+  if(id!=="cf"&&id!=="ef")return;
+  snap();
+  const d=readForm(id);
+  if(id==="cf"){
+    const t={id:nid(),...d,bP:0,bT:0,stacks:[],img:pendingImg};pendingImg=null;
+    S.tokens.push(t);S.example=false;sheet={kind:"tok",id:t.id,sel:0,amt:1,dmg:1,bp:0,bt:0,ec:0};log(`Added ${t.name} to the board`);
+  }else{
+    const t=S.tokens.find(x=>x.id===sheet.id);if(!t)return;
+    Object.assign(t,d);if(!t.creature)t.stacks.forEach(s=>{s.c=0;s.sick=false});if(t.emblem)t.stacks.forEach(s=>{s.tapped=false;s.d=0});merge(t);
+    log(`Edited ${t.name}`);sheet={kind:"tok",id:t.id,sel:0,amt:1,dmg:1,bp:0,bt:0,ec:0};
+  }
+  pendingDel=false;render();
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&sheet){sheet=null;render()}});
+document.addEventListener("input",e=>{
+  const el=e.target;
+  if(el.id==="q"){
+    const words=el.value.toLowerCase().trim().split(/\s+/).filter(Boolean);let shown=0;
+    document.querySelectorAll(".preset [data-k]").forEach(b=>{const ok=words.every(w=>b.dataset.k.includes(w));b.hidden=!ok;if(ok)shown++});
+    document.getElementById("nomatch").hidden=shown>0;sfSearch(el.value.trim());return;
+  }
+  if(el.id==="acc-pick"){TH.accent=el.value;applyTheme();return}
+  const m=el.id.match(/^(cf|ef)-text$/);
+  if(m){const found=kwFrom(el.value);for(const k in found)if(found[k])document.getElementById(m[1]+"-"+k).checked=true}
+});
+async function useImage(forCustom,file){
+  let url;try{url=await shrink(file)}catch(err){return}
+  if(forCustom){pendingImg=url;const pv=document.getElementById("cf-pv");if(pv)pv.style.background=`url('${url}') center/cover no-repeat`;return}
+  const t=S.tokens.find(x=>x.id===sheet?.id);if(!t)return;snap();t.img=url;render();
+}
+document.addEventListener("change",e=>{
+  const el=e.target;
+  const km=el.id.match(/^(cf|ef)-(emb|cre|art|ench)$/);
+  if(km&&el.checked){const f=km[1];if(km[2]==="emb")["cre","art","ench"].forEach(k=>{document.getElementById(f+"-"+k).checked=false});else document.getElementById(f+"-emb").checked=false;return}
+  if(el.id==="arr"){UI.arr=el.value;saveUI();if(UI.arr==="name")arranging=false;render();return}
+  if(el.id==="frame-pick"){const tk=S.tokens.find(x=>x.id===sheet?.id);if(tk){snap();tk.frame=el.value;render()}return}
+  if(el.id==="acc-pick"){render();return}
+  if(el.id==="bk-file"){const f=el.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{document.getElementById("bk-in").value=r.result;sheet.err="";render()};r.readAsText(f);return}
+  if(el.id!=="tok-img"&&el.id!=="cf-img")return;
+  const file=el.files&&el.files[0];if(file)useImage(el.id==="cf-img",file);
+});
+document.addEventListener("paste",e=>{
+  const el=e.target;if(el.id!=="tok-paste"&&el.id!=="cf-paste")return;
+  e.preventDefault();
+  const items=[...(e.clipboardData?.items||[])];
+  const it=items.find(i=>i.kind==="file"&&i.type.startsWith("image/"));
+  if(!it){el.value="";el.placeholder="That wasn't an image. Copy a photo, then paste here.";return}
+  el.value="";el.placeholder="Image added";
+  useImage(el.id==="cf-paste",it.getAsFile());
+});
+</script>
+<div class="bar" id="bar"></div>
+<script>render()</script>
+<div style="position:fixed;top:4px;left:50%;transform:translateX(-50%);background:#c62828;color:#fff;font:700 11px sans-serif;padding:2px 8px;border-radius:8px;z-index:9999;pointer-events:none">TEST</div></body>
+</html>
