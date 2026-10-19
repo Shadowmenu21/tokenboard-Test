@@ -34,7 +34,7 @@ body{font-family:var(--f-ui);font-size:16px;line-height:1.35;
   background:radial-gradient(120% 80% at 50% 0%,var(--felt-2),var(--felt) 70%) fixed;}
 button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
-.wrap{max-width:760px;margin:0 auto;display:grid;gap:14px}
+.wrap{max-width:760px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
 header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
 h1{font-family:var(--f-display);font-size:22px;margin:0;letter-spacing:.04em;color:var(--brass)}
 .ghost{background:none;border:1px solid var(--line);border-radius:8px;padding:6px 12px;color:var(--muted);font-size:14px}
@@ -173,6 +173,62 @@ textarea{min-height:56px;resize:vertical}
 .switch.mini{flex:none;padding:5px 9px;gap:7px}.switch.mini b{font-size:13px}
 .arr select{flex:1 1 auto;width:0;text-overflow:ellipsis}.toolbar>.ghost{flex:none}
 .arr>.sec{display:none}.toolbar .sm{display:none}@media (max-width:440px){.toolbar .lg{display:none}.toolbar .sm{display:inline}}@media (max-width:400px){.toolbar>.ghost{padding-left:9px;padding-right:9px}.switch.mini{padding:5px 7px}}
+#lifefx{position:fixed;z-index:200;transform:translate(-50%,-100%);font:800 26px/1 system-ui,sans-serif;font-variant-numeric:tabular-nums;pointer-events:none;opacity:0;transition:opacity .35s,margin .35s;margin-top:0;text-shadow:0 2px 6px rgba(0,0,0,.45)}
+#lifefx.show{opacity:1;margin-top:-10px}#lifefx.up{color:var(--c-ready)}#lifefx.down{color:var(--danger)}
+#lifefx.pop{animation:fxpop .22s ease-out}@keyframes fxpop{from{scale:1.35}to{scale:1}}
+.cmdlist{display:grid;gap:8px}.cmdrow{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;background:var(--felt);border:1px solid var(--line);border-radius:10px;padding:6px 8px}
+.cmdrow input{min-width:0;background:none;border:0;border-bottom:1px dashed var(--line);border-radius:0;padding:4px 2px;font-weight:600}
+.cmdrow output{font-size:20px;min-width:2.2ch;text-align:center;font-variant-numeric:tabular-nums}
+.cmdrow.lethal{border-color:var(--danger)}.cmdrow.lethal output{color:var(--danger)}.cmdrow small{grid-column:1/-1;color:var(--danger);font-size:12px}
+.wipebtns{display:grid;gap:8px}.wipebtns .btn{display:grid;gap:2px;height:auto;padding:12px;text-align:left}.wipebtns small{font-size:12px;opacity:.85}
+@media (prefers-reduced-motion:reduce){#lifefx,#lifefx.pop{transition:none;animation:none}}
+/* tap feedback */
+button,.card{transition:transform .09s ease,filter .09s ease}
+.pressing{transform:scale(.95);filter:brightness(1.18)}
+.fxf{position:fixed;pointer-events:none;z-index:300;background:var(--brass);opacity:0;animation:fxf .36s ease-out forwards}
+.fxf.bad{background:var(--danger)}.fxf.lite{background:#fff}.fxf.soft{animation-duration:.22s}
+@keyframes fxf{0%{opacity:.55;transform:scale(.97)}100%{opacity:0;transform:scale(1.06)}}
+.fxpop{animation:fxpop .24s ease-out}@keyframes fxpop{0%{transform:scale(.93)}60%{transform:scale(1.03)}100%{transform:scale(1)}}
+.shake{animation:shake .3s}@keyframes shake{0%,100%{transform:none}20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+html.rm button,html.rm .card{transition:filter .09s}html.rm .pressing{transform:none}
+html.rm .fxpop{animation:none}html.rm .fxf{animation-name:fxfade}@keyframes fxfade{0%{opacity:.5}100%{opacity:0}}
+html.rm .shake{animation:shfade .3s}@keyframes shfade{0%,100%{outline:0}30%,70%{outline:2px solid var(--danger)}}
+.makes{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px}.makes .btn{height:auto;min-height:48px;padding:6px 4px;display:grid;place-content:center;line-height:1.15}
+.makes .btn small{font-size:12px;font-weight:600;opacity:.8}
+.feats{display:grid;gap:8px}.feats .sec{margin:6px 0 0}
+.topbar.nolife{grid-template-columns:minmax(0,1fr)}
+.bar .in.noatk{grid-template-columns:auto 1fr 1fr}
+.ctheme{display:grid;gap:6px}.ctheme .row{display:flex;gap:6px}.ctheme .row .ghost{flex:1;padding:4px 8px}
+.tegrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.tef{display:flex;align-items:center;gap:10px;background:var(--felt);border:1px solid var(--line);border-radius:10px;padding:6px 8px;font-size:14px;min-width:0}
+.tef input{flex:none;width:38px;height:30px;padding:0;border:1px solid var(--line);border-radius:6px;background:none}
+.tewarn{display:grid;gap:4px;border:1px solid var(--danger);color:var(--danger);border-radius:10px;padding:8px 10px;font-size:13px}
+.fld{display:grid;gap:4px}
+.phase{display:grid;grid-template-columns:minmax(0,1fr);min-width:0;gap:8px;background:var(--felt-2);border:1px solid var(--line);border-radius:12px;padding:10px}
+.phstrip{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}.phstrip::-webkit-scrollbar{display:none}
+.phstrip .ph{flex:none;font-size:12px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);display:flex;gap:4px;align-items:center;white-space:nowrap}
+.phstrip .ph i{font-style:normal;font-size:10.5px;font-weight:700;background:var(--brass);color:var(--brass-ink);border-radius:999px;padding:0 5px}
+.phstrip .ph.cur{background:var(--brass);border-color:var(--brass);color:var(--brass-ink);font-weight:700}.phstrip .ph.cur i{background:var(--brass-ink);color:var(--brass)}
+.phstrip .ph.past{opacity:.5}.phstrip .ph.skip{border-style:dashed;opacity:.55}
+.phhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.phhead b{font-family:var(--f-display);font-size:18px;color:var(--brass)}.phhead span{font-size:13px;color:var(--muted)}
+.phidle{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.chipbtn{border:1px solid var(--brass);color:var(--brass);background:none;border-radius:999px;padding:4px 10px;font-size:13px;font-weight:600}
+.trigs{display:grid;gap:8px}.trig{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;background:var(--felt);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.trig .tt{min-width:0}.trig .tt p{margin:2px 0 0;font-size:13px;color:var(--ink);opacity:.9}.trig em{font-style:normal;font-size:12px;color:var(--c-ready);margin-left:6px}
+.trig.skip em{color:var(--muted)}.trig.done,.trig.skip{opacity:.75;padding-block:5px}
+.trig .tb{display:grid;gap:6px}.trig .tb .btn{height:34px;font-size:14px;padding:0 12px}
+.cond{color:var(--c-tap);font-weight:600}
+.nudge{border:1px solid var(--c-tap);color:var(--c-tap);border-radius:10px;padding:8px 10px;font-size:13px}
+.perms{display:grid;gap:8px}.permhead{display:flex;gap:8px;align-items:center}.permhead .gh{flex:1}
+.permlist{display:grid;gap:6px}.permrow{display:grid;gap:2px;text-align:left;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--felt-2)}
+.permrow small{font-size:12px;color:var(--muted)}.permrow.st{position:relative}.permrow .ghost{justify-self:start;margin-top:4px;padding:3px 10px}
+.oracle{white-space:pre-wrap;font-size:14px;background:var(--felt);border:1px solid var(--line);border-radius:10px;padding:10px}
+.remform{display:grid;grid-template-columns:auto 1fr auto;gap:6px}.remform select,.remform input{min-width:0}
+.wipechk{font-size:14px;display:flex;gap:8px;align-items:flex-start}
+.btn.glow{box-shadow:0 0 0 2px var(--ink),0 0 14px 2px var(--brass);animation:glow 1.4s ease-in-out infinite}
+@keyframes glow{50%{box-shadow:0 0 0 2px var(--ink),0 0 4px 0 var(--brass)}}html.rm .btn.glow{animation:none}
+.bar .in.phmode{grid-template-columns:auto 1fr 1.3fr}.bar .in.phmode.noatk{grid-template-columns:auto 1fr}
+.btn.phnext{background:var(--felt-3);border-color:var(--brass);color:var(--brass)}.btn.phnext.start{background:var(--brass);color:var(--brass-ink)}
 .switch small{font-size:11.5px;color:var(--muted)}
 @media (max-width:380px){.mod.sw2{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){.switch .knob,.switch .knob::after{transition:none}}
@@ -316,7 +372,7 @@ let uid=1;const nid=()=>"t"+(Date.now().toString(36))+(uid++);
 /* the parts of a token that define its type (no counts) */
 const typeOf=t=>({name:t.name,p:t.p,t:t.t,col:t.col,text:t.text,art:t.art,creature:t.creature,kw:{...t.kw},bP:t.bP||0,bT:t.bT||0,ench:!!t.ench,emblem:!!t.emblem,...(t.img?{img:t.img}:{}),...(t.frame?{frame:t.frame}:{})});
 const newTok=def=>({...typeOf(def),id:nid(),stacks:[]});
-const fresh=start=>({defAtk:false,haste:false,tough:false,tokens:[],aP:0,aT:0,eP:0,eT:0,dbl:0,life:start,start,lastAtk:null,log:[],turn:{e:0,d:0,s:0},example:false});
+const fresh=start=>({perms:[],ph:null,pdone:{},nudge:null,cmdN:3,cmd:[0,0,0,0,0],opp:["Opponent 1","Opponent 2","Opponent 3","Opponent 4","Opponent 5"],defAtk:false,haste:false,tough:false,tokens:[],aP:0,aT:0,eP:0,eT:0,dbl:0,life:start,start,lastAtk:null,log:[],turn:{e:0,d:0,s:0},example:false});
 function example(){
   const P=n=>newTok(PRESETS.find(p=>p.name===n));
   const s=P("Soldier"); s.stacks=[{n:4,tapped:false,sick:false,c:0},{n:3,tapped:true,sick:false,c:0},{n:2,tapped:false,sick:true,c:0},{n:2,tapped:false,sick:false,c:1}];
@@ -325,7 +381,8 @@ function example(){
   return{...fresh(20),tokens:[s,g,tr],aP:1,aT:1,example:true};
 }
 function norm(o){
-  o.defAtk??=false;o.haste??=false;o.tough??=false;o.eP??=0;o.eT??=0;o.dbl??=0;o.aP??=0;o.aT??=0;o.start??=20;o.life??=o.start;o.log??=[];o.lastAtk??=null;o.turn??={e:0,d:0,s:0};
+  o.perms??=[];o.ph??=null;o.pdone??={};o.nudge??=null;o.perms.forEach(p=>{p.rem??=[];p.id??=nid()});
+  o.cmdN??=3;o.cmd??=[0,0,0,0,0];o.opp??=[1,2,3,4,5].map(i=>"Opponent "+i);o.defAtk??=false;o.haste??=false;o.tough??=false;o.eP??=0;o.eT??=0;o.dbl??=0;o.aP??=0;o.aT??=0;o.start??=20;o.life??=o.start;o.log??=[];o.lastAtk??=null;o.turn??={e:0,d:0,s:0};
   o.tokens.forEach(t=>{t.ench??=false;t.emblem??=false;t.kw??=kwFrom(t.text);t.bP??=0;t.bT??=0;t.stacks??=[];t.id??=nid()});
   return o;
 }
@@ -336,6 +393,25 @@ let D=load(DKEY);if(!Array.isArray(D))D=[];
 /* per-phone view settings: board arrangement, open panels */
 const UKEY="tokenboard-test.ui.v1";
 let UI=load(UKEY)||{};UI.arr??="mine";UI.buffs??=false;UI.open??={};UI.collapsed??={};
+/* Features page: everything can be hidden per phone; hiding never deletes data */
+const FEAT=[
+  ["Life & combat","life","Life panel","Life total at the top of the board",true],
+  ["Life & combat","cmd","Commander damage","On the life screen",true],
+  ["Life & combat","lifefx","Life change effect","Floating +12 / −13 when life changes",true],
+  ["Life & combat","atk","Attack button","In the bottom bar",true],
+  ["Board","totals","Totals bar","Tokens, creatures, ready, ready power",true],
+  ["Board","turnline","This turn line","Entered, died, sacrificed",true],
+  ["Board","lastlog","Last log line","Most recent log entry",true],
+  ["Toolbar","haste","Haste switch","Hiding it also turns haste off",true],
+  ["Toolbar","arr","Grouping menu","My order, Creatures, Tokens, …",true],
+  ["Triggers","phase","Phase tracker","Steps through your turn and lists your triggers",true],
+  ["Triggers","skip","Skip phases with no triggers","Main phase always stops",true],
+  ["Triggers","nudge","Nudge before moving on","When a trigger isn't marked Done or Skip",true],
+  ["Triggers","theirs","On their turns chip","Your triggers that fire on opponents' turns",true],
+  ["Feel","vib","Vibrate on tap","Short buzz on Android",false],
+  ["Feel","rmotion","Reduce motion","Fades instead of movement",false]];
+UI.f??={};for(const f of FEAT)UI.f[f[1]]??=f[4];
+const F=k=>UI.f[k]!==false;
 function saveUI(){try{localStorage.setItem(UKEY,JSON.stringify(UI))}catch(e){}}
 let arranging=false;
 const ARR={mine:"My order",type:"Creatures, Tokens",color:"By color",name:"By name"};
@@ -374,22 +450,51 @@ const THEMES={
   golgari:{label:"Golgari",note:"Black–green, moss and rot",g:"guild",light:false,v:{felt:"#12160f","felt-2":"#1a2015","felt-3":"#242c1d",line:"#34402a",ink:"#e6ead8",muted:"#a2ab8c",brass:"#a6c95e",danger:"#e3795c","c-ready":"#a9dcbc","c-tap":"#e2c47e","c-sick":"#aec4e2","c-ctr":"#dcb2ea"}},
   boros:{label:"Boros",note:"Red–white, sun and steel",g:"guild",light:false,v:{felt:"#20120c","felt-2":"#2b1a12","felt-3":"#3a2418",line:"#563626",ink:"#f7ece0",muted:"#cbab92",brass:"#f2b84b",danger:"#ff8a6a","c-ready":"#a9dcbc","c-tap":"#e2c47e","c-sick":"#aec4e2","c-ctr":"#dcb2ea"}},
   simic:{label:"Simic",note:"Green–blue, deep reef",g:"guild",light:false,v:{felt:"#0c1c1b","felt-2":"#122725","felt-3":"#1a3532",line:"#264d48",ink:"#e3f3ef",muted:"#93bdb4",brass:"#4fd1b5",danger:"#ec806a","c-ready":"#a9dcbc","c-tap":"#e2c47e","c-sick":"#aec4e2","c-ctr":"#dcb2ea"}},
+  esper:{label:"Esper",note:"White–blue–black, etherium",g:"tri",light:false,v:{felt:"#10141c","felt-2":"#171d28","felt-3":"#212a38",line:"#313d50",ink:"#e8edf4",muted:"#a0abbd",brass:"#9fc3e8",danger:"#ec806a","c-ready":"#a9dcbc","c-tap":"#e2c47e","c-sick":"#aec4e2","c-ctr":"#dcb2ea"}},
+  grixis:{label:"Grixis",note:"Blue–black–red, ruin",g:"tri",light:false,v:{felt:"#150d16","felt-2":"#1f1420","felt-3":"#2b1c2c",line:"#432c45",ink:"#f0e6f0",muted:"#b49fb6",brass:"#e05a7a",danger:"#ffb067","c-ready":"#a9dcbc","c-tap":"#e2c47e","c-sick":"#aec4e2","c-ctr":"#dcb2ea"}},
+  jund:{label:"Jund",note:"Black–red–green, dragonfire",g:"tri",light:false,v:{felt:"#17120b","felt-2":"#211a10","felt-3":"#2d2416",line:"#463822",ink:"#f0e9da",muted:"#bba98a",brass:"#e07a2e",danger:"#f26d8a","c-ready":"#a9dcbc","c-tap":"#e2c47e","c-sick":"#aec4e2","c-ctr":"#dcb2ea"}},
+  naya:{label:"Naya",note:"Red–green–white, light",g:"tri",light:true,v:{felt:"#f3eddc","felt-2":"#fcf8ec","felt-3":"#e9dfc4",line:"#d6c8a3",ink:"#2b2416",muted:"#6e6248",brass:"#a65a14",danger:"#a8323e","c-ready":"#2b7349","c-tap":"#87620f","c-sick":"#3a5c88","c-ctr":"#76398f"}},
+  bant:{label:"Bant",note:"Green–white–blue, light",g:"tri",light:true,v:{felt:"#eaf2ee","felt-2":"#f8fbf9","felt-3":"#dae8e1",line:"#c0d5ca",ink:"#1c2a24",muted:"#57705f",brass:"#256f7e",danger:"#b4452a","c-ready":"#2b7349","c-tap":"#87620f","c-sick":"#3a5c88","c-ctr":"#76398f"}},
+  abzan:{label:"Abzan",note:"White–black–green, endurance",g:"tri",light:false,v:{felt:"#121510","felt-2":"#1a1e17","felt-3":"#242a20",line:"#383f31",ink:"#ece9dc",muted:"#a9ab98",brass:"#e3c88a",danger:"#e8806a","c-ready":"#a9dcbc","c-tap":"#e2c47e","c-sick":"#aec4e2","c-ctr":"#dcb2ea"}},
+  jeskai:{label:"Jeskai",note:"Blue–red–white, the way",g:"tri",light:false,v:{felt:"#121626","felt-2":"#1a1f33","felt-3":"#242b44",line:"#363f60",ink:"#f2f0ea",muted:"#aab0c4",brass:"#ff8a5b",danger:"#ff9a9a","c-ready":"#a9dcbc","c-tap":"#e2c47e","c-sick":"#aec4e2","c-ctr":"#dcb2ea"}},
+  sultai:{label:"Sultai",note:"Black–green–blue, serpent",g:"tri",light:false,v:{felt:"#0b1614","felt-2":"#11201d","felt-3":"#182c28",line:"#26413b",ink:"#e1eee9",muted:"#93b2a8",brass:"#57c4a0",danger:"#ec806a","c-ready":"#a9dcbc","c-tap":"#e2c47e","c-sick":"#aec4e2","c-ctr":"#dcb2ea"}},
+  mardu:{label:"Mardu",note:"Red–white–black, war horn",g:"tri",light:false,v:{felt:"#1a0f0f","felt-2":"#241515","felt-3":"#311d1c",line:"#4a2b29",ink:"#f4e8e4",muted:"#c1a19b",brass:"#e8c070",danger:"#ff7d6b","c-ready":"#a9dcbc","c-tap":"#e2c47e","c-sick":"#aec4e2","c-ctr":"#dcb2ea"}},
+  temur:{label:"Temur",note:"Green–blue–red, ice and fire",g:"tri",light:false,v:{felt:"#0e1a1f","felt-2":"#15252c","felt-3":"#1e333c",line:"#2d4a56",ink:"#e6f2f4",muted:"#9dbac0",brass:"#7fd4e8",danger:"#ff8a6a","c-ready":"#a9dcbc","c-tap":"#e2c47e","c-sick":"#aec4e2","c-ctr":"#dcb2ea"}},
+  contrast:{label:"High contrast",note:"Black and white, bold accent",g:"other",light:false,v:{felt:"#000000","felt-2":"#0a0a0a","felt-3":"#1a1a1a",line:"#8a8a8a",ink:"#ffffff",muted:"#e2e2e2",brass:"#ffd400",danger:"#ff6b6b","c-ready":"#7dffb0","c-tap":"#ffd966","c-sick":"#9cc9ff","c-ctr":"#f0a8ff"}},
+  pastel:{label:"Pastel",note:"Soft lavender, light",g:"other",light:true,v:{felt:"#f4eff8","felt-2":"#fdfbff","felt-3":"#e9e1f2",line:"#d8cce6",ink:"#2c2535",muted:"#6d6278",brass:"#7f52b5",danger:"#b4452a","c-ready":"#2b7349","c-tap":"#87620f","c-sick":"#3a5c88","c-ctr":"#76398f"}},
+  slate:{label:"Slate",note:"Plain gray",g:"other",light:false,v:{felt:"#1e2124","felt-2":"#26292d","felt-3":"#303439",line:"#43484f",ink:"#eef0f2",muted:"#a9b0b8",brass:"#8fb3d9",danger:"#e8806a","c-ready":"#a9dcbc","c-tap":"#e2c47e","c-sick":"#aec4e2","c-ctr":"#dcb2ea"}},
   void:{label:"Void",note:"True black, saves battery",g:"other",light:false,v:{felt:"#000000","felt-2":"#0b0b0d","felt-3":"#151518",line:"#26262b",ink:"#ececf0",muted:"#9a9aa4",brass:"#c8a2ff",danger:"#ff7d6b","c-ready":"#a9dcbc","c-tap":"#e2c47e","c-sick":"#aec4e2","c-ctr":"#dcb2ea"}}
 };
 const ACCENTS=["#d6ab52","#e8d9a8","#6fb8ea","#b98bdc","#f08d5e","#7fc77a","#e35d6a","#c9ced6"];
-const TKEY="tokenboard-test.theme.v1";
-let TH=load(TKEY);if(!TH||!THEMES[TH.name])TH={name:"forest",accent:null};
+const TKEY="tokenboard-test.theme.v1",CTKEY="tokenboard-test.themes.v1";
+/* custom themes: [{id,label,light,v:{...},frame}] ; selected as TH.name="c:<id>" */
+let CT=load(CTKEY);if(!Array.isArray(CT))CT=[];
+const saveCT=()=>{try{localStorage.setItem(CTKEY,JSON.stringify(CT))}catch(e){}};
+const themeOf=n=>THEMES[n]||(n&&n.startsWith("c:")&&CT.find(t=>"c:"+t.id===n))||null;
+let TH=load(TKEY);if(!TH||!themeOf(TH.name))TH={name:"forest",accent:null};
 function inkFor(hex){const n=parseInt(hex.slice(1),16),c=[n>>16&255,n>>8&255,n&255].map(v=>{v/=255;return v<=.03928?v/12.92:((v+.055)/1.055)**2.4});
   const L=.2126*c[0]+.7152*c[1]+.0722*c[2];return (L+.05)/(.006+.05)>=(.98+.05)/(L+.05)?"#16120a":"#fffaf0"}
-function applyTheme(){
-  const th=THEMES[TH.name],r=document.documentElement;
+function applyTheme(prev){
+  const th=prev||themeOf(TH.name)||THEMES.forest,r=document.documentElement;
   for(const k in th.v)r.style.setProperty("--"+k,th.v[k]);
-  const acc=TH.accent||th.v.brass;
+  const acc=(!prev&&TH.accent)||th.v.brass;
   r.style.setProperty("--brass",acc);r.style.setProperty("--brass-ink",inkFor(acc));
   r.style.colorScheme=th.light?"light":"dark";
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content",th.v.felt);
-  try{localStorage.setItem(TKEY,JSON.stringify(TH))}catch(e){}
+  if(!prev)try{localStorage.setItem(TKEY,JSON.stringify(TH))}catch(e){}
 }
+const themeFrame=()=>{if(sheet?.kind==="te")return sheet.draft.frame||null;const th=themeOf(TH.name);return th&&th.frame||null};
+/* WCAG contrast between two hex colors */
+function lum(hex){const n=parseInt(hex.slice(1),16);return [n>>16&255,n>>8&255,n&255].map(v=>{v/=255;return v<=.03928?v/12.92:((v+.055)/1.055)**2.4}).reduce((a,v,i)=>a+v*[.2126,.7152,.0722][i],0)}
+const contrast=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)};
+function themeWarnings(v){const w=[];
+  if(contrast(v.ink,v.felt)<4.5||contrast(v.ink,v["felt-2"])<4.5)w.push("Text may be hard to read on the background or panels.");
+  if(contrast(v.muted,v["felt-2"])<3)w.push("Secondary text may be hard to read.");
+  if(contrast(v.brass,v.felt)<3)w.push("Accent may not stand out from the background.");
+  if(contrast(v.danger,v["felt-2"])<3)w.push("Warning color may be hard to see.");
+  if(["c-ready","c-tap","c-sick","c-ctr"].some(k=>contrast(v[k],v.felt)<3))w.push("A status color (ready, tapped, sick, counters) may be hard to see.");
+  return w}
+const TE_FIELDS=[["Background","felt"],["Panels","felt-2"],["Buttons","felt-3"],["Borders","line"],["Text","ink"],["Secondary text","muted"],["Accent","brass"],["Warnings","danger"],["Ready","c-ready"],["Tapped","c-tap"],["Summoning sick","c-sick"],["Counters","c-ctr"]];
 applyTheme();
 let saveFailed=false;
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));localStorage.setItem(DKEY,JSON.stringify(D));saveFailed=false}catch(e){saveFailed=true}}
@@ -404,6 +509,20 @@ const hhmm=()=>new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit
 function log(m,k){const last=S.log[S.log.length-1];
   if(k&&last&&last.k===k){last.m=m;last.ts=hhmm();return}
   S.log.push({m,k:k||null,ts:hhmm()});if(S.log.length>100)S.log.shift();}
+
+/* Life changes: quick repeated taps add up into one log line and one floating +N / -N */
+const lifeMsg=(d,tot)=>d>0?`${d} life gained, new total ${tot}`:d<0?`${-d} life lost, new total ${tot}`:`Life unchanged at ${tot}`;
+function setLife(n,k="life",pre){const d=n-S.life;if(!d)return;S.life=n;lifeFx(d);
+  const last=S.log[S.log.length-1],now=Date.now();
+  if(last&&last.k===k&&now-(last.t||0)<4000){last.d+=d;last.t=now;last.ts=hhmm();last.m=(pre?pre(last):"")+lifeMsg(last.d,S.life);return}
+  S.log.push({k,d,t:now,ts:hhmm(),m:""});if(S.log.length>100)S.log.shift();const e=S.log[S.log.length-1];e.c0=k.startsWith("cmd")?S.cmd[+k.slice(3)]-(-d):0;e.m=(pre?pre(e):"")+lifeMsg(d,S.life)}
+let fxSum=0,fxLast=0,fxTimer=0;
+function lifeFx(d){if(!F("lifefx"))return;const now=Date.now();if(now-fxLast>1500)fxSum=0;fxSum+=d;fxLast=now;
+  let el=document.getElementById("lifefx");if(!el){el=document.createElement("div");el.id="lifefx";el.setAttribute("aria-hidden","true");document.body.appendChild(el)}
+  el.textContent=fxSum>0?"+"+fxSum:fxSum<0?"−"+(-fxSum):"±0";el.className=fxSum>0?"up":fxSum<0?"down":"";
+  requestAnimationFrame(()=>{const tgt=document.querySelector(".sheet .lifebig")||document.querySelector(".lifetap");if(!tgt)return;const b=tgt.getBoundingClientRect();
+    el.style.left=(b.left+b.width/2)+"px";el.style.top=(b.top-6)+"px";el.classList.remove("pop");void el.offsetWidth;el.classList.add("show","pop")});
+  clearTimeout(fxTimer);fxTimer=setTimeout(()=>el.classList.remove("show"),1500)}
 
 /* counts from repeated quick taps add up into one line */
 function logAdd(k,n,verb,name){const last=S.log[S.log.length-1];
@@ -474,7 +593,7 @@ function abilityText(t){
 function cardHTML(t){
   const c=COLORS[t.col]||COLORS.C,n=cnt(t),txt=abilityText(t);
   const buffed=t.creature&&(bufP(t)||bufT(t)),dead=t.creature&&t.t+bufT(t)<=0;
-  return `<button class="card${n?"":" gone"}" data-a="open" data-id="${t.id}" aria-label="${esc(t.name)}, ${n} in play" style="--fr:${t.frame||c.fr};--art:${artBg(t)}">
+  return `<button class="card${n?"":" gone"}" data-a="open" data-id="${t.id}" aria-label="${esc(t.name)}, ${n} in play" style="--fr:${t.frame||themeFrame()||c.fr};--art:${artBg(t)}">
     <div class="frame">
       <div class="nm">${esc(t.name)}</div>
       <div class="art${t.img?" ph":""}"><div class="ct"><small>×</small>${n}</div></div>
@@ -496,6 +615,105 @@ function chipsHTML(t){
 }
 const stepper=(k,label,a="mod")=>`<div class="step"><button data-a="${a}" data-k="${k}" data-v="-1" data-rep aria-label="Lower ${label}">−</button><output class="${S[k]?"on":""}">${sgn(S[k])}</output><button data-a="${a}" data-k="${k}" data-v="1" data-rep aria-label="Raise ${label}">+</button></div>`;
 
+/* ---------- phase tracker ----------
+   Reads "At the beginning of …" abilities from a permanent's exact Oracle text.
+   Old "at end of turn" wording was errata'd to "at the beginning of the end step" (CR 513.1a),
+   and untap-step triggers wait for upkeep (CR 502.4), so Untap never has a checklist. */
+const PH=[["untap","Untap"],["upkeep","Upkeep"],["draw","Draw"],["main1","Main"],["combat","Combat"],["main2","Main 2"],["end","End step"],["cleanup","Cleanup"]];
+const PHL=Object.fromEntries(PH),ORDER=["upkeep","draw","main1","combat","main2","end"];
+const TRIG_MEMO=new Map();
+function phaseTriggers(text,type){
+  const key=(type||"")+"\u0000"+(text||"");if(TRIG_MEMO.has(key))return TRIG_MEMO.get(key);
+  const out=[];
+  (text||"").split("\n").forEach(ln=>{
+    const body=ln.replace(/^[^—\n]{1,40}\s—\s/,"").trim();let m,when,eff;
+    if((m=body.match(/^At end of combat( on your turn)?, (.*)$/i))){out.push({ph:"combat",who:m[1]?"you":"each",when:"end of combat"+(m[1]||""),eff:m[2],cond:null});return}
+    if(!(m=body.match(/^At the beginning of (.+?), (.*)$/i)))return;
+    when=m[1].toLowerCase();eff=m[2];
+    let who=/^(your|each of your)\b|on your turn/.test(when)?"you":/opponent/.test(when)?"opp":"each";
+    let phs=[];
+    if(/upkeep/.test(when))phs=["upkeep"];
+    else if(/draw step/.test(when))phs=["draw"];
+    else if(/(precombat|first) main/.test(when))phs=["main1"];
+    else if(/(postcombat|second) main/.test(when))phs=["main2"];
+    else if(/main phase/.test(when))phs=["main1","main2"];
+    else if(/combat/.test(when))phs=["combat"];
+    else if(/end step/.test(when))phs=["end"];
+    else phs=["?"];
+    const cond=(eff.match(/^if ([^,]+),/i)||[])[1]||null;if(cond)eff=eff.replace(/^if [^,]+,\s*/i,"");
+    for(const ph of phs)out.push({ph,who,when,eff,cond});
+  });
+  if(/\bSaga\b/.test(type||""))out.push({ph:"main1",who:"you",when:"precombat main phase",eff:"Add a lore counter, then resolve the chapter that triggers.",cond:null,tba:true});
+  TRIG_MEMO.set(key,out);return out;
+}
+/* checklist items for a phase. mine=true: my turn (your + each); mine=false: their turns (each + opponent's) */
+function phaseItems(ph,mine=true){const out=[];
+  for(const p of S.perms){
+    phaseTriggers(p.text,p.type).forEach((t,j)=>{if(t.ph!==ph)return;if(mine?t.who==="opp":t.who==="you")return;out.push({key:p.id+":"+j,pid:p.id,name:p.name,eff:t.eff,cond:t.cond,tba:t.tba})});
+    if(mine)(p.rem||[]).forEach((r,j)=>{if(r.ph===ph)out.push({key:p.id+":r"+j,pid:p.id,name:p.name,eff:r.note,rem:true})});
+  }
+  return out}
+const stopsAt=ph=>ph==="main1"||!F("skip")||phaseItems(ph).length>0;
+const nextStop=cur=>ORDER.slice(cur?ORDER.indexOf(cur)+1:0).find(stopsAt)||"cleanup";
+const unmarked=ph=>phaseItems(ph).filter(it=>!S.pdone[it.key]).length;
+function permTags(p){const set=new Set(),all=new Set();
+  const own=new Set();phaseTriggers(p.text,p.type).forEach(t=>{set.add(t.ph);if(t.who==="each")all.add(t.ph);if(t.who!=="opp")own.add(t.ph)});(p.rem||[]).forEach(r=>{set.add(r.ph);own.add(r.ph)});
+  return [...set].map(ph=>ph==="?"?"Timing not recognized":PHL[ph]+(all.has(ph)?" (every turn)":own.has(ph)?"":" (their turns)")).join(" · ")}
+function permFrom(raw){const faces=raw.card_faces||[];const text=raw.oracle_text??faces.map(f=>f.oracle_text||"").join("\n");
+  const type=raw.type_line||faces[0]?.type_line||"";
+  return {id:nid(),name:raw.name,type,text,cre:/Creature/.test(type),ind:(raw.keywords||[]).includes("Indestructible"),rem:[]}}
+const permCopy=p=>({name:p.name,type:p.type,text:p.text,cre:!!p.cre,ind:!!p.ind,rem:(p.rem||[]).map(r=>({...r}))});
+function addPerm(p){const n={...permCopy(p),id:nid()};S.perms.push(n);log(`${n.name} entered the battlefield`);return n}
+function theirItems(){return ORDER.flatMap(ph=>phaseItems(ph,false).map(it=>({...it,ph})))}
+function phaseHTML(){
+  if(!F("phase"))return "";
+  const cur=S.ph,items=cur?phaseItems(cur):[];
+  const strip=`<div class="phstrip" aria-label="Turn phases">${PH.map(([k,lb])=>{const n=ORDER.includes(k)?phaseItems(k).length:0;
+    const st=cur===k?"cur":(cur&&ORDER.includes(k)&&ORDER.indexOf(k)<ORDER.indexOf(cur))||(cur&&k==="untap")?"past":"";
+    const skip=ORDER.includes(k)&&!stopsAt(k)?" skip":"";
+    return `<span class="ph ${st}${skip}">${k==="end"?"End":lb}${n?`<i>${n}</i>`:""}</span>`}).join("")}</div>`;
+  let body="";
+  if(!cur){const th=F("theirs")?theirItems():[];
+    body=`<div class="phidle"><span>Waiting for your turn. Tap <b>My turn</b> to untap and start.</span>${th.length?`<button class="chipbtn" data-a="ptheirs">On their turns: ${th.length}</button>`:""}</div>`}
+  else{
+    const pend=unmarked(cur);
+    body=`<div class="phhead"><b>${PHL[cur]}</b><span>${items.length?`${items.length-pend} of ${items.length} handled`:cur==="main1"?"Play your turn":"Nothing triggers"}</span></div>`+
+    (items.length?`<div class="trigs">${items.map(it=>{const m=S.pdone[it.key];
+      return `<div class="trig${m?" "+m:""}"><div class="tt"><b>${esc(it.name)}</b>${m?`<em>${m==="done"?"Done":"Skipped"}</em>`:""}
+        ${m?"":`<p>${it.cond?`<span class="cond">If ${esc(it.cond)}</span> · `:""}${esc(it.eff)}</p>`}</div>
+        ${m?`<button class="ghost" data-a="pmark" data-k="${it.key}" data-v="${m}" aria-label="Unmark ${esc(it.name)}">Undo</button>`:
+        `<div class="tb"><button class="btn" data-a="pmark" data-k="${it.key}" data-v="skip">Skip</button><button class="btn pri" data-a="pmark" data-k="${it.key}" data-v="done">Done</button></div>`}</div>`}).join("")}</div>`:"")+
+    (S.nudge===cur&&pend?`<div class="nudge">${plural(pend,pend>1?"triggers":"trigger")} not done. Tap <b>Next</b> again to continue anyway.</div>`:"")+
+    (cur==="combat"&&F("atk")?`<div class="note">Attacking? Use the highlighted Attack button.</div>`:"");
+  }
+  return `<div class="phase">${strip}${body}</div>`;
+}
+function permsHTML(){
+  if(!F("phase"))return "";
+  const shut=UI.collapsed["perms"];
+  return `<div class="perms"><div class="permhead"><button class="gh" data-a="grp" data-k="perms" aria-expanded="${!shut}"><span>Permanents · ${S.perms.length}</span><i>${shut?"Show ▼":"Hide ▲"}</i></button><button class="ghost" data-a="padd">+ Add</button></div>
+    ${shut?"":S.perms.length?`<div class="permlist">${S.perms.map(p=>`<button class="permrow" data-a="popen" data-id="${p.id}"><b>${esc(p.name)}</b><small>${esc(permTags(p)||"No phase triggers")}</small></button>`).join("")}</div>`
+      :`<div class="note">Add your commander, enchantments and other cards with upkeep or end step triggers. The phase tracker reads their exact rules text.</div>`}</div>`}
+const PS={items:[],timer:null,ctl:null,q:""};
+function psShow(html){const el=document.getElementById("ps");if(el)el.innerHTML=html}
+function permSearch(q){
+  clearTimeout(PS.timer);PS.ctl?.abort();
+  if(q.length<2){PS.items=[];psShow("");return}
+  if(!navigator.onLine){psShow('<div class="note">You\'re offline. Card search needs internet. You can still add a card by name below.</div>');return}
+  psShow('<div class="note">Searching Scryfall…</div>');
+  PS.timer=setTimeout(async()=>{
+    PS.ctl=new AbortController();PS.q=q;
+    try{
+      const r=await fetch("https://api.scryfall.com/cards/search?unique=cards&order=name&q="+encodeURIComponent(q+" -t:token -t:emblem"),{signal:PS.ctl.signal,headers:{Accept:"application/json"}});
+      if(PS.q!==q)return;
+      if(r.status===404){PS.items=[];psShow('<div class="note">No cards match that.</div>');return}
+      if(!r.ok)throw new Error(r.status);
+      const j=await r.json();PS.items=(j.data||[]).slice(0,20);
+      psShow(PS.items.map((raw,i)=>{const c=permFrom(raw),tg=permTags(c);return `<button class="sfitem" data-a="ppick" data-i="${i}"><span class="sfmeta"><b>${esc(c.name)}</b><small>${esc(c.type)}</small>
+        <small class="sftext">${esc(tg||"No upkeep, draw, combat or end step triggers")}</small></span></button>`}).join("")+`<div class="note">${j.total_cards>20?`Showing 20 of ${j.total_cards}. `:""}Card data from Scryfall.</div>`);
+    }catch(e){if(e.name==="AbortError")return;psShow('<div class="note">Couldn\'t reach Scryfall right now. Try again in a moment.</div>')}
+  },450);
+}
 function buffSummary(){const p=[];
   if(S.aP||S.aT)p.push(`Anthem ${sgn(S.aP)}/${sgn(S.aT)}`);
   if(S.eP||S.eT)p.push(`This turn ${sgn(S.eP)}/${sgn(S.eT)}`);
@@ -513,8 +731,8 @@ function render(){
   setHTML(document.getElementById("app"),`
   <header><h1>Token Board</h1><button class="ghost" data-a="menu">Menu</button></header>
   ${S.example?`<div class="note">Example board loaded. Moving over from the old version? Menu → Backup & restore. Otherwise start fresh from Menu → New game.</div>`:""}
-  <div class="topbar">
-    <div class="lifebox"><span class="sec">Life</span><div class="step"><button data-a="life" data-v="-1" data-rep aria-label="Lose life">−</button><button class="lifetap" data-a="lifesheet" aria-label="Life ${S.life}. Tap to change by 5, 10, or set it">${S.life}</button><button data-a="life" data-v="1" data-rep aria-label="Gain life">+</button></div></div>
+  <div class="topbar${F("life")?"":" nolife"}">
+    ${F("life")?`<div class="lifebox"><span class="sec">Life</span><div class="step"><button data-a="life" data-v="-1" data-rep aria-label="Lose life">−</button><button class="lifetap" data-a="lifesheet" aria-label="Life ${S.life}. Tap to change by 5, 10, or set it">${S.life}</button><button data-a="life" data-v="1" data-rep aria-label="Gain life">+</button></div></div>`:""}
     <button class="buffbtn" data-a="buffs" aria-expanded="${UI.buffs}"><span class="sec">Buffs</span><span class="bline"><span class="bsum${buffSummary()?" on":""}">${buffSummary()||"None active"}</span><i>${UI.buffs?"Hide ▲":"Show ▼"}</i></span></button>
   </div>
   ${UI.buffs?`<div class="mods">
@@ -530,27 +748,29 @@ function render(){
     </div>
     <div class="mod wide"><label>Doublers</label><div class="step"><button data-a="dbl" data-v="-1" aria-label="Fewer doublers">−</button><output class="${S.dbl?"on":""}">×${mult()}</output><button data-a="dbl" data-v="1" aria-label="More doublers">+</button></div></div>
   </div>`:""}
-  <div class="sum">
+  ${F("totals")?`<div class="sum">
     <div><b>${T.all}</b><span>Tokens</span></div>
     <div><b>${T.cre}</b><span>Creatures</span></div>
     <div class="hot"><b>${T.ready}</b><span>Ready</span></div>
     <div class="hot"><b>${T.rp}</b><span>${S.tough?"Ready damage":"Ready power"}</span></div>
-  </div>
+  </div>`:""}
   ${T.dead?`<div class="deadbar"><span>${T.dead} token${T.dead>1?"s have":" has"} lethal damage or 0 toughness</span><button data-a="cleandead">Clean up</button></div>`:""}
   ${S.lastAtk?`<div class="atk"><div><span>Attacking with ${S.lastAtk.n}${blockedN(S.lastAtk)?` · ${blockedN(S.lastAtk)} blocked`:""}</span>
       ${S.lastAtk.att?`<button class="atkbtn" data-a="blkopen">Mark blocked</button>`:""}</div><b>${atkDamage(S.lastAtk)} dmg</b></div>`:""}
-  ${S.turn.e||S.turn.d||S.turn.s?`<div class="turnline"><span class="sec">This turn</span><span><b>${S.turn.e}</b> entered</span><span><b>${S.turn.d}</b> died</span><span><b>${S.turn.s}</b> sacrificed</span></div>`:""}
-  ${last?`<button class="lastlog" data-a="logsheet"><span>${esc(last.m)}</span><em>Log</em></button>`:""}
+  ${F("turnline")&&(S.turn.e||S.turn.d||S.turn.s)?`<div class="turnline"><span class="sec">This turn</span><span><b>${S.turn.e}</b> entered</span><span><b>${S.turn.d}</b> died</span><span><b>${S.turn.s}</b> sacrificed</span></div>`:""}
+  ${F("lastlog")&&last?`<button class="lastlog" data-a="logsheet"><span>${esc(last.m)}</span><em>Log</em></button>`:""}
+  ${phaseHTML()}
+  ${permsHTML()}
   <div class="toolbar">
-    <label class="arr"><span class="sec">Show</span><select id="arr" aria-label="Arrange tokens">${Object.entries(ARR).map(([k,v])=>`<option value="${k}"${UI.arr===k?" selected":""}>${v}</option>`).join("")}</select></label>
-    <button class="switch mini" data-a="flag" data-k="haste" role="switch" aria-checked="${S.haste}" aria-label="New creatures enter with haste"><span class="knob"></span><span><b>Haste</b></span></button>
+    ${F("arr")?`<label class="arr"><span class="sec">Show</span><select id="arr" aria-label="Arrange tokens">${Object.entries(ARR).map(([k,v])=>`<option value="${k}"${UI.arr===k?" selected":""}>${v}</option>`).join("")}</select></label>`:`<span class="arr"></span>`}
+    ${F("haste")?`<button class="switch mini" data-a="flag" data-k="haste" role="switch" aria-checked="${S.haste}" aria-label="New creatures enter with haste"><span class="knob"></span><span><b>Haste</b></span></button>`:""}
     ${S.tokens.length>1?`<button class="ghost${arranging?" on":""}" data-a="arrange" ${UI.arr==="name"?"disabled":""}><span class="lg">${arranging?"Done arranging":"Rearrange"}</span><span class="sm">${arranging?"Done":"Move"}</span></button>`:""}
   </div>
   ${arranging?`<div class="note">Use the arrows to move tokens. ${UI.arr==="type"||UI.arr==="color"?"Tokens move within their group.":""}</div>`:""}
   <div class="grid">
     ${displayGroups().map(g=>{const ck=UI.arr+":"+g.h,shut=g.h&&UI.collapsed[ck]&&!arranging;
       const head=g.h?`<button class="gh" data-a="grp" data-k="${esc(ck)}" aria-expanded="${!shut}"><span>${esc(g.h)} · ${g.items.reduce((a,t)=>a+cnt(t),0)}</span><i>${shut?"Show ▼":"Hide ▲"}</i></button>`:"";
-      if(shut)return head+`<div class="mini">${g.items.map(t=>`<button data-a="open" data-id="${t.id}" class="${cnt(t)?"":"gone"}" style="--fr:${t.frame||(COLORS[t.col]||COLORS.C).fr}"><b>${esc(t.name)}</b><span>×${cnt(t)}</span>${t.creature?`<em>${ptStr(t,0)}</em>`:""}${readyN(t)?`<small>${readyN(t)} ready</small>`:""}</button>`).join("")}</div>`;
+      if(shut)return head+`<div class="mini">${g.items.map(t=>`<button data-a="open" data-id="${t.id}" class="${cnt(t)?"":"gone"}" style="--fr:${t.frame||themeFrame()||(COLORS[t.col]||COLORS.C).fr}"><b>${esc(t.name)}</b><span>×${cnt(t)}</span>${t.creature?`<em>${ptStr(t,0)}</em>`:""}${readyN(t)?`<small>${readyN(t)} ready</small>`:""}</button>`).join("")}</div>`;
       return head+g.items.map((t,i)=>`<div class="slot${arranging?" arranging":""}">${cardHTML(t)}
       <div class="chips">${chipsHTML(t)}</div>
       ${arranging?`<div class="movebar">
@@ -568,12 +788,14 @@ function render(){
     ${arranging?"":`<button class="add" data-a="addsheet"><div><span>+</span>Add token</div></button>`}
   </div>
   ${saveFailed?`<div class="warnline">Your phone's browser storage is full, so changes won't survive a reload. Remove some photos, then make a backup.</div>`:""}`);
-  setHTML(document.getElementById("bar"),`<div class="in">
+  setHTML(document.getElementById("bar"),`<div class="in${F("atk")?"":" noatk"}${F("phase")?" phmode":""}">
     <button class="btn sm" data-a="undo" ${hist.length?"":"disabled"}>Undo</button>
-    <button class="btn pri" data-a="atkopen" ${T.ready?"":"disabled"}>Attack…</button>
-    <button class="btn" data-a="endturn">End turn</button>
-    <button class="btn" data-a="myturn">My turn</button></div>`);
+    ${F("atk")?`<button class="btn pri${F("phase")&&S.ph==="combat"?" glow":""}" data-a="atkopen" ${T.ready?"":"disabled"}>Attack…</button>`:""}
+    ${F("phase")?`<button class="btn phnext${S.ph?"":" start"}" data-a="phnext">${!S.ph?"My turn":S.nudge===S.ph&&unmarked(S.ph)?"Next anyway":nextStop(S.ph)==="cleanup"?"End turn":PHL[nextStop(S.ph)]+" ▶"}</button>`
+    :`<button class="btn" data-a="endturn">End turn</button>
+    <button class="btn" data-a="myturn">My turn</button>`}</div>`);
   renderSheet();
+  const cur=document.querySelector(".phstrip .cur");if(cur){const sp=cur.parentElement;sp.scrollLeft=Math.max(0,cur.offsetLeft-sp.offsetLeft-sp.clientWidth/2+cur.offsetWidth/2)}
 }
 
 /* ---------- token form (custom + edit) ---------- */
@@ -611,7 +833,7 @@ const DL={save:({filename,data})=>{const blob=new Blob([data],{type:"application
 function backupJSON(photos){
   const strip=o=>{if(!photos)delete o.img;return o};
   const board=clone(S);board.tokens=board.tokens.map(t=>strip({...t}));
-  return JSON.stringify({app:"tokenboard",v:1,saved:new Date().toISOString(),theme:TH,board,decks:D.map(d=>({...d,tokens:d.tokens.map(t=>strip({...t}))}))});
+  return JSON.stringify({app:"tokenboard",v:1,saved:new Date().toISOString(),theme:TH,themes:CT,board,decks:D.map(d=>({...d,tokens:d.tokens.map(t=>strip({...t}))}))});
 }
 
 
@@ -655,7 +877,7 @@ try{navigator.storage?.persist?.()}catch(e){}
 const sect=(k,title,hint,inner)=>`<button class="secbtn" data-a="sect" data-k="${k}" aria-expanded="${!!UI.open[k]}"><span>${title}${hint?` <small>${hint}</small>`:""}</span><i>${UI.open[k]?"−":"+"}</i></button>${UI.open[k]?`<div class="secbody">${inner}</div>`:""}`;
 
 /* ---------- decklist import via Scryfall (needs internet) ---------- */
-const IMP={busy:false,msg:"",found:[],missing:[],pick:{},name:""};
+const IMP={busy:false,msg:"",found:[],missing:[],pick:{},name:"",perms:[]};
 function parseDecklist(txt){
   const names=new Set();
   for(let ln of txt.split(/\r?\n/)){
@@ -689,6 +911,7 @@ async function runImport(){
   try{
     const {cards,missing}=await sfCollection(names.map(n=>({name:n})));
     IMP.missing=missing.map(m=>m.name).filter(Boolean);
+    IMP.perms=cards.map(permFrom).filter(p=>phaseTriggers(p.text,p.type).length).map(permCopy);
     const src=new Map();
     for(const c of cards)for(const part of (c.all_parts||[])){
       if(part.component!=="token"||part.id===c.id)continue;
@@ -703,18 +926,18 @@ async function runImport(){
       for(const n of src.get(raw.id)||[])merged.get(k).from.add(n);}
     IMP.found=[...merged.values()].map(x=>({tok:x.tok,from:[...x.from]})).sort((a,b)=>(a.tok.emblem-b.tok.emblem)||(b.tok.creature-a.tok.creature)||a.tok.name.localeCompare(b.tok.name));
     IMP.pick={};IMP.found.forEach((_,i)=>IMP.pick[i]=true);
-    IMP.busy=false;IMP.msg=`${IMP.found.length} different tokens and emblems from ${cards.length} cards.`;
+    IMP.busy=false;IMP.msg=`${IMP.found.length} different tokens and emblems from ${cards.length} cards.${IMP.perms.length?` ${IMP.perms.length} cards have phase triggers and will be saved with the preset for the phase tracker.`:""}`;
   }catch(e){IMP.busy=false;IMP.msg="Couldn't reach Scryfall right now. Check your connection and try again."}
   render();
 }
 /* ---------- sheets ---------- */
-let sheet=null,pendingDel=false,pendingReset=false,pendingDeck=null,pendingRestore=false,openKey=null,pendingImg=null;
+let pendingCT=null;let sheet=null,pendingDel=false,pendingReset=false,pendingDeck=null,pendingRestore=false,openKey=null,pendingImg=null;
 function renderSheet(){
   const L=document.getElementById("layer");
   if(!sheet){L.innerHTML="";openKey=null;return}
   const key=sheet.kind+":"+(sheet.id||"");
   const isFresh=openKey!==key||!L.querySelector(".sheet");
-  if((sheet.kind==="add"||sheet.kind==="edit")&&!isFresh)return; // keep typed text in place
+  if((sheet.kind==="add"||sheet.kind==="edit"||sheet.kind==="padd")&&!isFresh)return; // keep typed text in place
   let body="";
   const head=(title,btns)=>`<div class="sh"><h2>${title}</h2><div class="row">${btns}</div></div>`;
   const done=`<button class="ghost" data-a="close">Done</button>`;
@@ -737,7 +960,9 @@ function renderSheet(){
       <button class="btn" data-a="op" data-op="sac">Sacrifice ${sheet.amt}</button>
       <button class="btn" data-a="op" data-op="remove">Remove ${sheet.amt}</button>
     </div>`):""}
-    <button class="btn pri" data-a="make">${t.emblem?`Add ${sheet.amt} emblem${sheet.amt>1?"s":""}`:`Make ${sheet.amt}`}${S.dbl&&!t.emblem?` → ${sheet.amt*mult()} with doublers`:""}${sheet.ec&&t.creature?` with ${sheet.ec} counter${sheet.ec>1?"s":""}`:""}</button>
+    <div class="makes">${(()=>{const mk=n=>`<button class="btn pri" data-a="make" data-n="${n}" aria-label="${t.emblem?"Add":"Make"} ${n}${S.dbl&&!t.emblem?`, ${n*mult()} with doublers`:""}">${t.emblem?"Add":"Make"} ${n}${S.dbl&&!t.emblem?`<small>→ ${n*mult()}</small>`:""}</button>`;
+      return [1,5,10].map(mk).join("")+([1,5,10].includes(sheet.amt)?"":mk(sheet.amt))})()}</div>
+    ${sheet.ec&&t.creature?`<div class="note">New ones enter with ${plural(sheet.ec,sheet.ec>1?"counters":"counter")}.</div>`:""}
     ${t.creature?sect("ctr","Counters & bonuses",sheet.ec?`new ones enter with ${sheet.ec}`:"",`
       ${st?`<div class="acts">
         <button class="btn" data-a="op" data-op="plus">+1/+1 on ${sheet.amt}</button>
@@ -805,13 +1030,78 @@ function renderSheet(){
     <div class="lifebig">${S.life}</div>
     <div class="lifebtns">${[-10,-5,-1,1,5,10].map(v=>`<button class="btn${v>0?" up":" down"}" data-a="life" data-v="${v}" data-rep aria-label="${v>0?"Gain":"Lose"} ${Math.abs(v)} life">${v>0?"+":"−"}${Math.abs(v)}</button>`).join("")}</div>
     <form id="lf" class="deckform"><input id="life-in" type="number" inputmode="numeric" placeholder="Set life to…" aria-label="Set life total"><button class="btn pri" type="submit">Set</button></form>
-    <div class="note">Started at ${S.start}${diff?` · ${diff>0?"up":"down"} ${Math.abs(diff)} this game`:""}. Hold a button to repeat it.</div>`;
+    <div class="note">Started at ${S.start}${diff?` · ${diff>0?"up":"down"} ${Math.abs(diff)} this game`:""}. Hold a button to repeat it.</div>
+    ${F("cmd")?`<p class="sec">Commander damage · opponents</p>
+    <div class="seg" style="grid-template-columns:repeat(5,1fr)" role="group" aria-label="Number of opponents">${[1,2,3,4,5].map(v=>`<button data-a="cmdn" data-v="${v}" class="${S.cmdN===v?"on":""}" aria-label="${v} opponent${v>1?"s":""}">${v}</button>`).join("")}</div>
+    <div class="cmdlist">${S.opp.slice(0,S.cmdN).map((nm,i)=>`<div class="cmdrow${S.cmd[i]>=21?" lethal":""}">
+      <input id="opn-${i}" value="${esc(nm)}" maxlength="18" aria-label="Opponent ${i+1} name">
+      <div class="step"><button data-a="cmd" data-i="${i}" data-v="-1" data-rep aria-label="Less commander damage from ${esc(nm)}" ${S.cmd[i]?"":"disabled"}>−</button><output>${S.cmd[i]}</output><button data-a="cmd" data-i="${i}" data-v="1" data-rep aria-label="More commander damage from ${esc(nm)}">+</button></div>
+      ${S.cmd[i]>=21?`<small>21+ combat damage from one commander: you lose</small>`:""}</div>`).join("")}</div>
+    <div class="note">Tap + for each point of combat damage an opponent's commander deals you; your life drops with it. − undoes a mistake and gives the life back. Tap a name to rename it.</div>`:""}`;
+  } else if(sheet.kind==="padd"){
+    const mine=new Set(S.perms.map(p=>p.name)),fromD=[];const seen=new Set();
+    for(const d of D)for(const p of d.perms||[])if(!seen.has(p.name)){seen.add(p.name);fromD.push({...p,deck:d.name})}
+    body=head("Add a permanent",done)+`
+    <input id="pq" type="search" placeholder="Search card name…" autocomplete="off" aria-label="Search cards">
+    <div id="ps" class="sfres"></div>
+    ${fromD.length?`<p class="sec">From your deck presets</p><div class="permlist">${fromD.map(p=>`<button class="permrow" data-a="pdeck" data-k="${esc(p.name)}"><b>${esc(p.name)}${mine.has(p.name)?" ✓":""}</b><small>${esc(p.deck)} · ${esc(permTags(p)||"no phase triggers")}</small></button>`).join("")}</div>`:""}
+    <p class="sec">Or add by name</p>
+    <form id="pmf" class="deckform"><input id="pm-name" maxlength="60" placeholder="Card name" aria-label="Card name"><button class="btn" type="submit">Add</button></form>
+    <div class="note">A card added by name has no rules text, so add reminders to it yourself. Deck presets saved from the decklist import remember your trigger cards.</div>`;
+  } else if(sheet.kind==="perm"){
+    const pm=S.perms.find(x=>x.id===sheet.id);if(!pm){sheet=null;L.innerHTML="";openKey=null;return}
+    const tr=phaseTriggers(pm.text,pm.type),unk=tr.filter(t=>t.ph==="?");
+    body=head(esc(pm.name),done)+`
+    ${pm.type?`<div class="note">${esc(pm.type)}</div>`:""}
+    ${pm.text?`<div class="oracle">${esc(pm.text)}</div>`:""}
+    <p class="sec">Phase triggers</p>
+    ${tr.filter(t=>t.ph!=="?").length?`<div class="permlist">${tr.filter(t=>t.ph!=="?").map(t=>`<div class="permrow st"><b>${PHL[t.ph]} · ${t.who==="you"?"your turn":t.who==="opp"?"opponents' turns":"every turn"}</b><small>${t.cond?`If ${esc(t.cond)} · `:""}${esc(t.eff)}</small></div>`).join("")}</div>`:`<div class="note">${pm.text?"No upkeep, draw, main, combat or end step triggers found in its text.":"No rules text."}</div>`}
+    ${unk.length?`<div class="nudge">The app couldn't tell when ${unk.length>1?"these":"this"} happens: "${esc(unk.map(t=>"At the beginning of "+t.when).join('", "'))}". Add a reminder below.</div>`:""}
+    <p class="sec">Your reminders</p>
+    ${pm.rem.length?`<div class="permlist">${pm.rem.map((r,i)=>`<div class="permrow st"><b>${PHL[r.ph]}</b><small>${esc(r.note)}</small><button class="ghost" data-a="premdel" data-i="${i}">Remove</button></div>`).join("")}</div>`:""}
+    <form id="prf" class="remform"><select id="pr-ph" aria-label="Phase">${ORDER.map(k=>`<option value="${k}">${PHL[k]}</option>`).join("")}</select><input id="pr-note" maxlength="120" placeholder="e.g. Pay {1} or sacrifice it" aria-label="Reminder"><button class="btn" type="submit">Add</button></form>
+    <button class="btn warnbtn" data-a="pleave">Left the battlefield</button>`;
+  } else if(sheet.kind==="theirs"){
+    const th=theirItems();
+    body=head("On their turns",done)+`<div class="note">Your cards that trigger during opponents' turns. The app doesn't step through their turns, so keep an eye out for these.</div>
+    <div class="permlist">${th.map(it=>`<div class="permrow st"><b>${PHL[it.ph]} · ${esc(it.name)}</b><small>${it.cond?`If ${esc(it.cond)} · `:""}${esc(it.eff)}</small></div>`).join("")}</div>`;
+  } else if(sheet.kind==="te"){
+    const dr=sheet.draft,wr=themeWarnings(dr.v);
+    body=head(sheet.edit?"Edit theme":"New theme",`<button class="ghost" data-a="tecancel">Cancel</button>`)+`
+    <label class="fld"><span class="sec">Name</span><input id="te-name" maxlength="24" value="${esc(dr.label)}" aria-label="Theme name"></label>
+    <div class="seg" style="grid-template-columns:1fr 1fr" role="group" aria-label="Light or dark"><button data-a="telight" data-v="0" class="${dr.light?"":"on"}">Dark</button><button data-a="telight" data-v="1" class="${dr.light?"on":""}">Light</button></div>
+    <div class="tegrid">${TE_FIELDS.map(([lb,k])=>`<label class="tef"><input type="color" id="te-${k}" value="${dr.v[k]}"><span>${lb}</span></label>`).join("")}</div>
+    <p class="sec">Token frames</p>
+    <div class="seg" style="grid-template-columns:1fr 1fr"><button data-a="teframe" data-v="0" class="${dr.frame?"":"on"}">By token color</button><button data-a="teframe" data-v="1" class="${dr.frame?"on":""}">One color</button></div>
+    ${dr.frame?`<label class="tef"><input type="color" id="te-frame" value="${dr.frame}"><span>Frame color for every token</span></label>`:""}
+    <div id="te-warn" class="tewarn"${wr.length?"":" hidden"}>${wr.map(x=>`<div>⚠ ${x}</div>`).join("")}</div>
+    <button class="btn pri" data-a="tesave">Save theme</button>
+    <div class="note">The board behind this sheet shows your colors as you pick them. Frame color applies to tokens that don't have their own frame color set.</div>`;
+  } else if(sheet.kind==="feat"){
+    let g0="";body=head("Features",`<button class="ghost" data-a="menu">Back</button>${done}`)+`<div class="feats">`+FEAT.map(([g,k,lb,ds])=>{
+      const h=g!==g0?`<p class="sec">${g}</p>`:"";g0=g;
+      return h+`<button class="switch" data-a="feat" data-k="${k}" role="switch" aria-checked="${UI.f[k]}"><span class="knob"></span><span><b>${lb}</b><small>${ds}</small></span></button>`}).join("")+`</div>
+    <button class="btn" data-a="featreset">Reset to defaults</button>
+    <div class="note">These settings belong to this phone. Hiding something never deletes it, and turning it back on brings it back as it was.</div>`;
+  } else if(sheet.kind==="wipe"){
+    const cr=S.tokens.filter(t=>t.creature&&!t.emblem),n0=cr.reduce((a,t)=>a+cnt(t),0),ind=cr.filter(t=>t.kw.ind).reduce((a,t)=>a+cnt(t),0);
+    const pc=F("phase")?S.perms.filter(p=>p.cre):[],n=n0+pc.length;
+    body=head("Board wipe",done)+`
+    <div class="note">${n0?`${plural(n0,n0>1?"creature tokens":"creature token")} on the board${ind?`, ${ind} of them indestructible`:""}.`:"No creature tokens on the board."} Non-creature tokens, enchantments and emblems stay.</div>
+    ${pc.length?`<label class="chk wipechk"><input type="checkbox" id="wipe-perms" checked> Also remove my creature cards: ${esc(pc.map(p=>p.name+(p.ind?" (indestructible)":"")).join(", "))}</label>`:""}
+    <div class="wipebtns">
+      <button class="btn warnbtn" data-a="wipe" data-v="destroy" ${n?"":"disabled"}><b>Destroy all creatures</b><small>${ind?"Indestructible ones survive":"Wrath of God, Damnation…"}</small></button>
+      <button class="btn" data-a="wipe" data-v="exile" ${n?"":"disabled"}><b>Exile all creatures</b><small>Indestructible doesn't help</small></button>
+    </div>
+    <div class="note">Destroyed tokens count as died this turn. Undo puts them back.</div>`;
   } else if(sheet.kind==="menu"){
     body=head("Menu",done)+`
     <div class="menu">
+      <button data-a="wipesheet"><b>Board wipe</b><span>Remove all creatures, keep everything else</span></button>
       <button data-a="decks"><b>Deck presets</b><span>${D.length?plural(D.length,D.length>1?"saved decks":"saved deck"):"Save this board's tokens to load next game"}</span></button>
       <button data-a="logsheet"><b>Game log</b><span>${S.log.length?`${S.log.length} entries this game`:"Nothing yet"}</span></button>
-      <button data-a="colors"><b>Colors</b><span>${THEMES[TH.name].label} theme${TH.accent?" · custom accent":""}</span></button>
+      <button data-a="feats"><b>Features</b><span>Turn parts of the app on or off</span></button>
+      <button data-a="colors"><b>Colors</b><span>${(themeOf(TH.name)||THEMES.forest).label} theme${TH.accent?" · custom accent":""}</span></button>
       ${installEvt?`<button data-a="install"><b>Install app</b><span>Add Token Board to your app drawer</span></button>`:""}
       <button data-a="backup"><b>Backup & restore</b><span>Keep a copy of your board and decks</span></button>
     </div>
@@ -847,9 +1137,14 @@ function renderSheet(){
     <form id="impf" class="deckform"><input id="imp-name" maxlength="40" placeholder="Deck name" required aria-label="Deck name"><button class="btn pri" type="submit" ${n?"":"disabled"}>Save ${n}</button></form>
     <div class="note">Not found: cards that copy other tokens (like Populate) or describe tokens only in their rules text. Add those by hand.${IMP.missing.length?` Couldn't find ${IMP.missing.length} card name${IMP.missing.length>1?"s":""}: ${esc(IMP.missing.slice(0,5).join(", "))}${IMP.missing.length>5?"…":""}.`:""} Card data from Scryfall.</div>`:""}`;
   } else if(sheet.kind==="colors"){
-    const acc=TH.accent||THEMES[TH.name].v.brass;
+    const acc=TH.accent||(themeOf(TH.name)||THEMES.forest).v.brass;
     body=head("Colors",`<button class="ghost" data-a="menu">Back</button>${done}`)+`
-    ${[["mana","Mana"],["guild","Guilds"],["other","Other"]].map(([gk,gl])=>`<p class="sec">${gl}</p>
+    <button class="btn" data-a="tenew">Create a theme from this one</button>
+    ${CT.length?`<p class="sec">Your themes</p><div class="themes">${CT.map(th=>`<div class="ctheme"><button class="theme${TH.name==="c:"+th.id?" on":""}" data-a="theme" data-v="c:${th.id}">
+      <span class="sw"><i style="background:${th.v.felt}"></i><i style="background:${th.v["felt-3"]}"></i><i style="background:${th.v.ink}"></i><i style="background:${th.v.brass}"></i></span>
+      <b>${esc(th.label)}</b><span>Custom${th.light?" · light":""}</span></button>
+      <div class="row"><button class="ghost" data-a="teedit" data-v="${th.id}">Edit</button><button class="ghost${pendingCT===th.id?" warn":""}" data-a="tedel" data-v="${th.id}">${pendingCT===th.id?"Tap again":"Delete"}</button></div></div>`).join("")}</div>`:""}
+    ${[["mana","Mana"],["guild","Guilds"],["tri","Shards & wedges"],["other","Other"]].map(([gk,gl])=>`<p class="sec">${gl}</p>
     <div class="themes">${Object.entries(THEMES).filter(([k,th])=>(th.g||"mana")===gk).map(([k,th])=>`<button class="theme${TH.name===k?" on":""}" data-a="theme" data-v="${k}">
       <span class="sw"><i style="background:${th.v.felt}"></i><i style="background:${th.v["felt-3"]}"></i><i style="background:${th.v.ink}"></i><i style="background:${th.v.brass}"></i></span>
       <b>${th.label}</b><span>${th.note}</span></button>`).join("")}</div>`).join("")}
@@ -914,7 +1209,7 @@ function applyOp(t,op){
 }
 
 /* actions that only change what's on screen, not the board */
-const VIEW=new Set(["impopen","impgo","imptog","impall","impnone","lifesheet","grp","buffs","sect","arrange","open","addsheet","close","sel","amt","amtAll","undo","atkopen","atkset","atkmax","atkall","atknone","edit","editback","menu","decks","logsheet","backup","bkcopy","bksave","bkphotos","deckdel","colors","theme","accent","accentreset","dmgamt","dttog","blkopen","bon","ecamt","install"]);
+const VIEW=new Set(["padd","popen","ptheirs","tenew","teedit","telight","teframe","tecancel","tesave","tedel","feats","feat","featreset","wipesheet","impopen","impgo","imptog","impall","impnone","lifesheet","grp","buffs","sect","arrange","open","addsheet","close","sel","amt","amtAll","undo","atkopen","atkset","atkmax","atkall","atknone","edit","editback","menu","decks","logsheet","backup","bkcopy","bksave","bkphotos","deckdel","colors","theme","accent","accentreset","dmgamt","dttog","blkopen","bon","ecamt","install"]);
 function act(ds,held){
   const a=ds.a,t=S.tokens.find(x=>x.id===ds.id);
   if(!held&&!VIEW.has(a)&&!(a==="reset"&&!pendingReset)&&!(a==="deltype"&&!pendingDel)&&!(a==="bkrestore"&&!pendingRestore))snap();
@@ -922,13 +1217,25 @@ function act(ds,held){
   if(a!=="deltype")pendingDel=false;
   if(a!=="deckdel")pendingDeck=null;
   if(a!=="bkrestore")pendingRestore=false;
+  if(a!=="tedel")pendingCT=null;
   const tok=()=>S.tokens.find(x=>x.id===sheet?.id);
   switch(a){
     case"mod":{const k=ds.k;S[k]=Math.max(-20,Math.min(30,S[k]+ +ds.v));
       const anth=k[0]==="a";log(`${anth?"Anthem":"Until end of turn"} ${sgn(anth?S.aP:S.eP)}/${sgn(anth?S.aT:S.eT)}`,anth?"anth":"eot");break}
     case"tmod":{const tk=tok();tk[ds.k]=Math.max(-20,Math.min(30,(tk[ds.k]||0)+ +ds.v));log(`${tk.name} type buff ${sgn(tk.bP)}/${sgn(tk.bT)}`,"tb"+tk.id);break}
-    case"life":{const last=S.log[S.log.length-1];const from=last?.k==="life"?last.from:S.life;S.life+= +ds.v;
-      log(`Life ${from} → ${S.life}`,"life");S.log[S.log.length-1].from=from;break}
+    case"life":setLife(S.life+ +ds.v);break;
+    case"cmd":{const i=+ds.i,v=+ds.v;if(S.cmd[i]+v<0)break;S.cmd[i]+=v;
+      setLife(S.life-v,"cmd"+i,e=>{const net=S.cmd[i]-e.c0;return `${S.opp[i]}'s commander: ${net>=0?"+":"−"}${Math.abs(net)} (total ${S.cmd[i]}${S.cmd[i]>=21?", lethal":""}) · `});break}
+    case"cmdn":S.cmdN=+ds.v;break;
+    case"wipesheet":sheet={kind:"wipe"};break;
+    case"wipe":{const ex=ds.v==="exile";let gone=0,kept=0;const parts=[];
+      for(const tk of S.tokens){if(!tk.creature||tk.emblem)continue;const n=cnt(tk);if(!n)continue;
+        if(!ex&&tk.kw.ind){kept+=n;continue}
+        gone+=n;parts.push(`${n} ${tk.name}`);tk.stacks.forEach(st=>{st.n=0});merge(tk)}
+      if(F("phase")&&document.getElementById("wipe-perms")?.checked){const go=S.perms.filter(p=>p.cre&&(ex||!p.ind)),stay=S.perms.filter(p=>p.cre&&!ex&&p.ind);
+        if(go.length){S.perms=S.perms.filter(p=>!go.includes(p));parts.push(go.map(p=>p.name).join(", "));gone+=go.length}kept+=stay.length}
+      if(!ex)S.turn.d+=gone;S.lastAtk=null;sheet=null;
+      log(`Board wipe: ${gone?parts.join(", ")+(ex?" exiled":" died"):"no creatures removed"}${kept?` · ${kept} indestructible survived`:""}`);break}
     case"dbl":S.dbl=Math.max(0,Math.min(5,S.dbl+ +ds.v));log(`Doublers ×${mult()}`,"dbl");break;
     case"reset":if(pendingReset){S=fresh(S.start);pendingReset=false;sheet=null}else pendingReset=true;break;
     case"startlife":S.start=+ds.v;break;
@@ -945,8 +1252,23 @@ function act(ds,held){
     case"atkgo":{let n=0,p=0;const att=[];
       for(const tk of S.tokens){for(const {s,k} of pick(tk,sheet.n[tk.id]||0)){const each=dmgOf(tk,s);n+=k;p+=k*each;att.push({id:tk.id,name:tk.name,k,p:each,c:s.c,mp:s.mp||0,mt:s.mt||0,tr:!!tk.kw.tr,dth:!!tk.kw.dth});if(!tk.kw.vig){s.n-=k;tk.stacks.push({...s,n:k,tapped:true})}}merge(tk)}
       S.lastAtk={n,p,att,bl:{},bt:{},x:0};log(`Attacked with ${n} for ${p}`);sheet=null;break}
-    case"endturn":for(const tk of S.tokens){tk.stacks.forEach(s=>{s.d=0;s.dt=false});merge(tk)}S.lastAtk=null;S.eP=0;S.eT=0;S.turn={e:0,d:0,s:0};log("End of turn: damage removed, pumps ended");break;
-    case"myturn":for(const tk of S.tokens){tk.stacks.forEach(s=>{s.tapped=false;s.sick=false});merge(tk)}S.lastAtk=null;log("My turn: untapped all, summoning sickness gone");break;
+    case"phnext":{
+      if(!S.ph){for(const tk of S.tokens){tk.stacks.forEach(s=>{s.tapped=false;s.sick=false});merge(tk)}S.lastAtk=null;S.pdone={};S.nudge=null;S.ph=nextStop(null);
+        log(`My turn: untapped all, summoning sickness gone · ${PHL[S.ph]}`);break}
+      if(F("nudge")&&unmarked(S.ph)&&S.nudge!==S.ph){S.nudge=S.ph;break}
+      S.nudge=null;const n=nextStop(S.ph);
+      if(n==="cleanup"){for(const tk of S.tokens){tk.stacks.forEach(s=>{s.d=0;s.dt=false});merge(tk)}S.lastAtk=null;S.eP=0;S.eT=0;S.turn={e:0,d:0,s:0};S.ph=null;S.pdone={};log("End of turn: damage removed, pumps ended");break}
+      S.ph=n;log(`Phase: ${PHL[n]}`,"phase");break}
+    case"pmark":{if(S.pdone[ds.k])delete S.pdone[ds.k];else S.pdone[ds.k]=ds.v;if(S.ph&&!unmarked(S.ph))S.nudge=null;break}
+    case"padd":sheet={kind:"padd"};PS.items=[];break;
+    case"ppick":{const raw=PS.items[+ds.i];if(!raw)break;const n=addPerm(permFrom(raw));sheet={kind:"perm",id:n.id};break}
+    case"pdeck":{const src=D.flatMap(d=>d.perms||[]).find(x=>x.name===ds.k);if(!src)break;addPerm(src);break}
+    case"popen":sheet={kind:"perm",id:ds.id};break;
+    case"pleave":{const p=S.perms.find(x=>x.id===sheet?.id);if(!p)break;S.perms=S.perms.filter(x=>x!==p);for(const k in S.pdone)if(k.startsWith(p.id+":"))delete S.pdone[k];log(`${p.name} left the battlefield`);sheet=null;break}
+    case"premdel":{const p=S.perms.find(x=>x.id===sheet?.id);if(!p)break;p.rem.splice(+ds.i,1);break}
+    case"ptheirs":sheet={kind:"theirs"};break;
+    case"endturn":S.ph=null;S.nudge=null;for(const tk of S.tokens){tk.stacks.forEach(s=>{s.d=0;s.dt=false});merge(tk)}S.lastAtk=null;S.eP=0;S.eT=0;S.turn={e:0,d:0,s:0};log("End of turn: damage removed, pumps ended");break;
+    case"myturn":S.ph=null;S.nudge=null;for(const tk of S.tokens){tk.stacks.forEach(s=>{s.tapped=false;s.sick=false});merge(tk)}S.lastAtk=null;log("My turn: untapped all, summoning sickness gone");break;
     case"open":sheet={kind:"tok",id:ds.id,sel:0,amt:1,dmg:1,bp:0,bt:0,ec:0};break;
     case"sac1":{const st=t.stacks.find(x=>!x.tapped)||t.stacks[0];if(sac(t,st,1))logAdd("sac"+t.id,1,"Sacrificed",t.name);break}
     case"blkopen":sheet={kind:"blk"};break;
@@ -980,19 +1302,33 @@ function act(ds,held){
     case"dup":{const tk=tok(),c=newTok(tk);S.tokens.splice(S.tokens.indexOf(tk)+1,0,c);log(`Copied ${tk.name} as a new type`);sheet={kind:"tok",id:c.id,sel:0,amt:1,dmg:1,bp:0,bt:0,ec:0};break}
     case"addsheet":sheet={kind:"add"};break;
     case"menu":sheet={kind:"menu"};break;
+    case"feats":sheet={kind:"feat"};break;
+    case"feat":UI.f[ds.k]=!UI.f[ds.k];if(ds.k==="haste"&&!UI.f.haste&&S.haste){S.haste=false;log("New creatures enter with haste: off")}if(ds.k==="arr"&&!UI.f.arr)arranging=false;saveUI();applyMotion();break;
+    case"featreset":for(const f of FEAT)UI.f[f[1]]=f[4];saveUI();applyMotion();break;
     case"decks":sheet={kind:"decks"};break;
     case"logsheet":sheet={kind:"log"};break;
     case"backup":sheet={kind:"backup",photos:true};break;
     case"colors":sheet={kind:"colors"};break;
     case"theme":TH.name=ds.v;TH.accent=null;applyTheme();break;
+    case"tenew":{const b=themeOf(TH.name)||THEMES.forest,v={...b.v};if(TH.accent)v.brass=TH.accent;
+      sheet={kind:"te",draft:{label:(b.label+" custom").slice(0,24),light:!!b.light,v,frame:b.frame||null}};applyTheme(sheet.draft);break}
+    case"teedit":{const t=CT.find(x=>x.id===ds.v);if(!t)break;sheet={kind:"te",edit:t.id,draft:JSON.parse(JSON.stringify(t))};applyTheme(sheet.draft);break}
+    case"telight":sheet.draft.light=ds.v==="1";applyTheme(sheet.draft);break;
+    case"teframe":sheet.draft.frame=ds.v==="1"?(sheet.draft.frame||"#c9b98f"):null;break;
+    case"tecancel":sheet={kind:"colors"};applyTheme();break;
+    case"tesave":{const dr=sheet.draft;dr.label=(document.getElementById("te-name")?.value||dr.label).trim().slice(0,24)||"My theme";
+      if(sheet.edit){const i=CT.findIndex(x=>x.id===sheet.edit);if(i>=0)CT[i]={...dr,id:sheet.edit}}else{dr.id=nid();CT.push(dr)}
+      saveCT();TH={name:"c:"+(sheet.edit||dr.id),accent:null};applyTheme();sheet={kind:"colors"};break}
+    case"tedel":if(pendingCT!==ds.v){pendingCT=ds.v;break}
+      CT=CT.filter(x=>x.id!==ds.v);saveCT();pendingCT=null;if(TH.name==="c:"+ds.v){TH={name:"forest",accent:null}}applyTheme();break;
     case"accent":TH.accent=ds.v;applyTheme();break;
     case"accentreset":TH.accent=null;applyTheme();break;
-    case"close":sheet=null;break;
+    case"close":if(sheet?.kind==="te"){sheet=null;applyTheme()}sheet=null;break;
     case"sel":sheet.sel=+ds.i;sheet.amt=1;break;
     case"amt":sheet.amt=Math.max(1,Math.min(999,sheet.amt+ +ds.v));break;
     case"amtAll":sheet.amt=tok().stacks[sheet.sel].n;break;
     case"op":applyOp(tok(),ds.op);break;
-    case"make":create(tok(),sheet.amt,sheet.ec||0);sheet.amt=1;break;
+    case"make":create(tok(),+ds.n||sheet.amt,sheet.ec||0);break;
     case"deltype":if(pendingDel){const tk=tok();S.tokens=S.tokens.filter(x=>x.id!==sheet.id);log(`Removed ${tk.name} from the board`);sheet=null;pendingDel=false}else pendingDel=true;break;
     case"rmimg":{const tk=tok();if(tk)delete tk.img;break}
     case"preset":{const tk=newTok(PRESETS[+ds.i]);S.tokens.push(tk);S.example=false;sheet={kind:"tok",id:tk.id,sel:0,amt:1,dmg:1,bp:0,bt:0,ec:0};break}
@@ -1013,13 +1349,35 @@ function act(ds,held){
       pendingRestore=false;
       try{const o=JSON.parse(document.getElementById("bk-in").value.trim());
         if(o.app!=="tokenboard"||!o.board||!Array.isArray(o.board.tokens))throw 0;
-        S=norm(o.board);D=Array.isArray(o.decks)?o.decks:[];if(o.theme&&THEMES[o.theme.name]){TH={name:o.theme.name,accent:o.theme.accent||null};applyTheme()}log("Restored from backup");sheet=null;
+        S=norm(o.board);D=Array.isArray(o.decks)?o.decks:[];if(Array.isArray(o.themes)){for(const t of o.themes)if(t&&t.id&&t.v&&!CT.some(x=>x.id===t.id))CT.push(t);saveCT()}if(o.theme&&themeOf(o.theme.name)){TH={name:o.theme.name,accent:o.theme.accent||null};applyTheme()}log("Restored from backup");sheet=null;
       }catch(e){hist.pop();sheet.err="That text isn't a Token Board backup. Make sure you copied all of it."}
       break}
     default:return false;
   }
   return true;
 }
+/* Button feedback. Every tap redraws the screen, which replaces the button that was pressed,
+   so the flash is drawn as an overlay where the button was and the new copy gets a small pop. */
+const BAD_A=new Set(["wipe","rm1","sac1","deltype","deckdel","reset"]);
+const isBad=b=>BAD_A.has(b.dataset.a)||["sac","remove"].includes(b.dataset.op)||b.classList.contains("warnbtn")||b.classList.contains("warn");
+function applyMotion(){document.documentElement.classList.toggle("rm",UI.f.rmotion||!!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches))}
+applyMotion();
+const buzz=ms=>{if(UI.f.vib&&navigator.vibrate)try{navigator.vibrate(ms)}catch(e){}};
+function fxAt(rect,radius,kind,soft){if(!rect||!rect.width)return;const o=document.createElement("div");o.className="fxf "+kind+(soft?" soft":"");
+  Object.assign(o.style,{left:rect.left+"px",top:rect.top+"px",width:rect.width+"px",height:rect.height+"px",borderRadius:radius});
+  document.body.appendChild(o);setTimeout(()=>o.remove(),450)}
+function twin(ds,rect){const keys=Object.keys(ds).filter(k=>k!=="rep");let best=null,bd=1e9;
+  document.querySelectorAll(`[data-a="${ds.a}"]`).forEach(el=>{if(!keys.every(k=>el.dataset[k]===ds[k]))return;const r=el.getBoundingClientRect(),d=Math.abs(r.left-rect.left)+Math.abs(r.top-rect.top);if(d<bd){bd=d;best=el}});return best}
+function feedback(b,soft){const rect=b.getBoundingClientRect(),radius=getComputedStyle(b).borderRadius,kind=isBad(b)?"bad":b.classList.contains("pri")?"lite":"acc",ds={...b.dataset};
+  buzz(soft?6:12);
+  setTimeout(()=>{fxAt(rect,radius,kind,soft);const n=ds.a?twin(ds,rect):(b.isConnected?b:null);if(n){n.classList.remove("fxpop");void n.offsetWidth;n.classList.add("fxpop");setTimeout(()=>n.classList.remove("fxpop"),260)}},0)}
+let pressEl=null;
+document.addEventListener("pointerdown",e=>{const b=e.target.closest("button,.card");if(!b)return;
+  if(b.disabled){b.classList.remove("shake");void b.offsetWidth;b.classList.add("shake");setTimeout(()=>b.classList.remove("shake"),320);return}
+  pressEl=b;b.classList.add("pressing")},true);
+const unpress=()=>{if(pressEl){pressEl.classList.remove("pressing");pressEl=null}};
+["pointerup","pointercancel"].forEach(ev=>document.addEventListener(ev,unpress,true));
+document.addEventListener("click",e=>{const b=e.target.closest("button,.card");if(!b||b.disabled||swallow)return;feedback(b)},true);
 let rep=null,swallow=false;
 document.addEventListener("click",e=>{
   const b=e.target.closest("[data-a]");if(!b||b.disabled)return;
@@ -1031,8 +1389,8 @@ document.addEventListener("click",e=>{
 document.addEventListener("pointerdown",e=>{
   swallow=false;
   const b=e.target.closest("[data-rep]");if(!b||b.disabled)return;
-  const ds={...b.dataset};let started=false;
-  const tick=()=>{if(!started){started=true;snap()}act(ds,true);render();swallow=true;rep=setTimeout(tick,85)};
+  const ds={...b.dataset};let started=false;const rect=b.getBoundingClientRect(),radius=getComputedStyle(b).borderRadius,kind=isBad(b)?"bad":"acc";let k=0;
+  const tick=()=>{if(!started){started=true;snap()}act(ds,true);render();swallow=true;if(k++%3===0){fxAt(rect,radius,kind,true);buzz(4)}rep=setTimeout(tick,85)};
   rep=setTimeout(tick,420);
 });
 const stopRep=()=>{if(rep){clearTimeout(rep);rep=null}};
@@ -1042,20 +1400,21 @@ document.addEventListener("contextmenu",e=>{if(e.target.closest("[data-rep]"))e.
 document.addEventListener("submit",e=>{
   e.preventDefault();
   const id=e.target.id;
+  if(id==="pmf"){const el=document.getElementById("pm-name"),name=el.value.trim();if(!name)return;snap();const n=addPerm({name,type:"",text:"",cre:false,ind:false,rem:[]});sheet={kind:"perm",id:n.id};render();return}
+  if(id==="prf"){const pm=S.perms.find(x=>x.id===sheet?.id),note=document.getElementById("pr-note").value.trim();if(!pm||!note)return;snap();pm.rem.push({ph:document.getElementById("pr-ph").value,note});document.getElementById("pr-note").value="";render();return}
   if(id==="impf"){const name=document.getElementById("imp-name").value.trim();
     const toks=IMP.found.filter((_,i)=>IMP.pick[i]).map(f=>typeOf({...f.tok}));if(!name||!toks.length)return;
-    const ex=D.find(d=>d.name.toLowerCase()===name.toLowerCase());const deck={id:ex?.id||nid(),name,tokens:toks};
+    const ex=D.find(d=>d.name.toLowerCase()===name.toLowerCase());const deck={id:ex?.id||nid(),name,tokens:toks,perms:IMP.perms||ex?.perms||[]};
     if(ex)D[D.indexOf(ex)]=deck;else D.push(deck);
     IMP.found=[];IMP.pick={};IMP.msg=`Saved "${name}" with ${toks.length} tokens. Load it from Deck presets.`;
     sheet={kind:"decks"};render();return}
   if(id==="df"){const name=document.getElementById("deck-name").value.trim();if(!name||!S.tokens.length)return;
     const ex=D.find(d=>d.name.toLowerCase()===name.toLowerCase());
-    const deck={id:ex?.id||nid(),name,tokens:S.tokens.map(typeOf)};
+    const deck={id:ex?.id||nid(),name,tokens:S.tokens.map(typeOf),perms:S.perms.length?S.perms.map(permCopy):(ex?.perms||[])};
     if(ex)D[D.indexOf(ex)]=deck;else D.push(deck);
     document.getElementById("deck-name").value="";render();return}
   if(id==="lf"){const el=document.getElementById("life-in"),n=parseInt(el.value,10);if(!Number.isFinite(n))return;
-    snap();const last=S.log[S.log.length-1];const from=last?.k==="life"?last.from:S.life;S.life=n;
-    log(`Life ${from} → ${S.life}`,"life");S.log[S.log.length-1].from=from;el.value="";el.blur();render();return}
+    snap();setLife(n,"lifeset");el.value="";el.blur();render();return}
   if(id!=="cf"&&id!=="ef")return;
   snap();
   const d=readForm(id);
@@ -1072,6 +1431,12 @@ document.addEventListener("submit",e=>{
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&sheet){sheet=null;render()}});
 document.addEventListener("input",e=>{
   const el=e.target;
+  if(el.id==="pq"){permSearch(el.value.trim());return}
+  const tm=el.id.match(/^te-(.+)$/);
+  if(tm&&sheet?.kind==="te"){const dr=sheet.draft;if(tm[1]==="name"){dr.label=el.value;return}
+    if(tm[1]==="frame")dr.frame=el.value;else dr.v[tm[1]]=el.value;applyTheme(dr);
+    if(tm[1]==="frame"){render();return}
+    const wr=themeWarnings(dr.v),box=document.getElementById("te-warn");if(box){box.hidden=!wr.length;box.innerHTML=wr.map(x=>`<div>⚠ ${x}</div>`).join("")}return}
   if(el.id==="q"){
     const words=el.value.toLowerCase().trim().split(/\s+/).filter(Boolean);let shown=0;
     document.querySelectorAll(".preset [data-k]").forEach(b=>{const ok=words.every(w=>b.dataset.k.includes(w));b.hidden=!ok;if(ok)shown++});
@@ -1090,6 +1455,7 @@ document.addEventListener("change",e=>{
   const el=e.target;
   const km=el.id.match(/^(cf|ef)-(emb|cre|art|ench)$/);
   if(km&&el.checked){const f=km[1];if(km[2]==="emb")["cre","art","ench"].forEach(k=>{document.getElementById(f+"-"+k).checked=false});else document.getElementById(f+"-emb").checked=false;return}
+  const on=el.id.match(/^opn-(\d)$/);if(on){const v=el.value.trim().slice(0,18);if(v&&v!==S.opp[+on[1]]){snap();S.opp[+on[1]]=v;render()}return}
   if(el.id==="arr"){UI.arr=el.value;saveUI();if(UI.arr==="name")arranging=false;render();return}
   if(el.id==="frame-pick"){const tk=S.tokens.find(x=>x.id===sheet?.id);if(tk){snap();tk.frame=el.value;render()}return}
   if(el.id==="acc-pick"){render();return}
