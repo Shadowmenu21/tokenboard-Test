@@ -372,7 +372,7 @@ let uid=1;const nid=()=>"t"+(Date.now().toString(36))+(uid++);
 /* the parts of a token that define its type (no counts) */
 const typeOf=t=>({name:t.name,p:t.p,t:t.t,col:t.col,text:t.text,art:t.art,creature:t.creature,kw:{...t.kw},bP:t.bP||0,bT:t.bT||0,ench:!!t.ench,emblem:!!t.emblem,...(t.img?{img:t.img}:{}),...(t.frame?{frame:t.frame}:{})});
 const newTok=def=>({...typeOf(def),id:nid(),stacks:[]});
-const fresh=start=>({perms:[],ph:null,pdone:{},nudge:null,cmdN:3,cmd:[0,0,0,0,0],opp:["Opponent 1","Opponent 2","Opponent 3","Opponent 4","Opponent 5"],defAtk:false,haste:false,tough:false,tokens:[],aP:0,aT:0,eP:0,eT:0,dbl:0,life:start,start,lastAtk:null,log:[],turn:{e:0,d:0,s:0},example:false});
+const fresh=start=>({deck:null,perms:[],ph:null,pdone:{},nudge:null,cmdN:3,cmd:[0,0,0,0,0],opp:["Opponent 1","Opponent 2","Opponent 3","Opponent 4","Opponent 5"],defAtk:false,haste:false,tough:false,tokens:[],aP:0,aT:0,eP:0,eT:0,dbl:0,life:start,start,lastAtk:null,log:[],turn:{e:0,d:0,s:0},example:false});
 function example(){
   const P=n=>newTok(PRESETS.find(p=>p.name===n));
   const s=P("Soldier"); s.stacks=[{n:4,tapped:false,sick:false,c:0},{n:3,tapped:true,sick:false,c:0},{n:2,tapped:false,sick:true,c:0},{n:2,tapped:false,sick:false,c:1}];
@@ -381,7 +381,7 @@ function example(){
   return{...fresh(20),tokens:[s,g,tr],aP:1,aT:1,example:true};
 }
 function norm(o){
-  o.perms??=[];o.ph??=null;o.pdone??={};o.nudge??=null;o.perms.forEach(p=>{p.rem??=[];p.id??=nid()});
+  o.deck??=null;o.perms??=[];o.ph??=null;o.pdone??={};o.nudge??=null;o.perms.forEach(p=>{p.rem??=[];p.id??=nid()});
   o.cmdN??=3;o.cmd??=[0,0,0,0,0];o.opp??=[1,2,3,4,5].map(i=>"Opponent "+i);o.defAtk??=false;o.haste??=false;o.tough??=false;o.eP??=0;o.eT??=0;o.dbl??=0;o.aP??=0;o.aT??=0;o.start??=20;o.life??=o.start;o.log??=[];o.lastAtk??=null;o.turn??={e:0,d:0,s:0};
   o.tokens.forEach(t=>{t.ench??=false;t.emblem??=false;t.kw??=kwFrom(t.text);t.bP??=0;t.bT??=0;t.stacks??=[];t.id??=nid()});
   return o;
@@ -932,12 +932,16 @@ async function runImport(){
 }
 /* ---------- sheets ---------- */
 let pendingCT=null;let sheet=null,pendingDel=false,pendingReset=false,pendingDeck=null,pendingRestore=false,openKey=null,pendingImg=null;
+function padList(){const mine=new Set(S.perms.map(p=>p.name)),cd=S.deck&&D.find(x=>x.id===S.deck.id),fromD=cd?.perms||[];
+  return cd?(fromD.length?`<p class="sec">From ${esc(cd.name)}</p><div class="permlist">${fromD.map(p=>{const on=mine.has(p.name);return `<button class="permrow" data-a="pdeck" data-k="${esc(p.name)}" ${on?"disabled":""}><b>${esc(p.name)}</b><small>${on?"On the battlefield":esc(permTags(p)||"no phase triggers")}</small></button>`}).join("")}</div>`
+      :`<div class="note">${esc(cd.name)} has no saved trigger cards. Import its decklist again from Deck presets to pick them up, or search below.</div>`):""}
 function renderSheet(){
   const L=document.getElementById("layer");
   if(!sheet){L.innerHTML="";openKey=null;return}
   const key=sheet.kind+":"+(sheet.id||"");
   const isFresh=openKey!==key||!L.querySelector(".sheet");
-  if((sheet.kind==="add"||sheet.kind==="edit"||sheet.kind==="padd")&&!isFresh)return; // keep typed text in place
+  if(sheet.kind==="padd"&&!isFresh){const el=document.getElementById("pdl");if(el)el.innerHTML=padList();return}
+  if((sheet.kind==="add"||sheet.kind==="edit")&&!isFresh)return; // keep typed text in place
   let body="";
   const head=(title,btns)=>`<div class="sh"><h2>${title}</h2><div class="row">${btns}</div></div>`;
   const done=`<button class="ghost" data-a="close">Done</button>`;
@@ -1039,15 +1043,14 @@ function renderSheet(){
       ${S.cmd[i]>=21?`<small>21+ combat damage from one commander: you lose</small>`:""}</div>`).join("")}</div>
     <div class="note">Tap + for each point of combat damage an opponent's commander deals you; your life drops with it. − undoes a mistake and gives the life back. Tap a name to rename it.</div>`:""}`;
   } else if(sheet.kind==="padd"){
-    const mine=new Set(S.perms.map(p=>p.name)),fromD=[];const seen=new Set();
-    for(const d of D)for(const p of d.perms||[])if(!seen.has(p.name)){seen.add(p.name);fromD.push({...p,deck:d.name})}
+    const cd=S.deck&&D.find(x=>x.id===S.deck.id);
     body=head("Add a permanent",done)+`
     <input id="pq" type="search" placeholder="Search card name…" autocomplete="off" aria-label="Search cards">
     <div id="ps" class="sfres"></div>
-    ${fromD.length?`<p class="sec">From your deck presets</p><div class="permlist">${fromD.map(p=>`<button class="permrow" data-a="pdeck" data-k="${esc(p.name)}"><b>${esc(p.name)}${mine.has(p.name)?" ✓":""}</b><small>${esc(p.deck)} · ${esc(permTags(p)||"no phase triggers")}</small></button>`).join("")}</div>`:""}
+    <div id="pdl">${padList()}</div>
     <p class="sec">Or add by name</p>
     <form id="pmf" class="deckform"><input id="pm-name" maxlength="60" placeholder="Card name" aria-label="Card name"><button class="btn" type="submit">Add</button></form>
-    <div class="note">A card added by name has no rules text, so add reminders to it yourself. Deck presets saved from the decklist import remember your trigger cards.</div>`;
+    <div class="note">A card added by name has no rules text, so add reminders to it yourself. ${cd?"":"Load a deck preset to see its trigger cards here."}</div>`;
   } else if(sheet.kind==="perm"){
     const pm=S.perms.find(x=>x.id===sheet.id);if(!pm){sheet=null;L.innerHTML="";openKey=null;return}
     const tr=phaseTriggers(pm.text,pm.type),unk=tr.filter(t=>t.ph==="?");
@@ -1262,7 +1265,7 @@ function act(ds,held){
     case"pmark":{if(S.pdone[ds.k])delete S.pdone[ds.k];else S.pdone[ds.k]=ds.v;if(S.ph&&!unmarked(S.ph))S.nudge=null;break}
     case"padd":sheet={kind:"padd"};PS.items=[];break;
     case"ppick":{const raw=PS.items[+ds.i];if(!raw)break;const n=addPerm(permFrom(raw));sheet={kind:"perm",id:n.id};break}
-    case"pdeck":{const src=D.flatMap(d=>d.perms||[]).find(x=>x.name===ds.k);if(!src)break;addPerm(src);break}
+    case"pdeck":{const cd=S.deck&&D.find(x=>x.id===S.deck.id),src=(cd?.perms||[]).find(x=>x.name===ds.k);if(!src||S.perms.some(p=>p.name===src.name))break;addPerm(src);break}
     case"popen":sheet={kind:"perm",id:ds.id};break;
     case"pleave":{const p=S.perms.find(x=>x.id===sheet?.id);if(!p)break;S.perms=S.perms.filter(x=>x!==p);for(const k in S.pdone)if(k.startsWith(p.id+":"))delete S.pdone[k];log(`${p.name} left the battlefield`);sheet=null;break}
     case"premdel":{const p=S.perms.find(x=>x.id===sheet?.id);if(!p)break;p.rem.splice(+ds.i,1);break}
@@ -1332,7 +1335,7 @@ function act(ds,held){
     case"deltype":if(pendingDel){const tk=tok();S.tokens=S.tokens.filter(x=>x.id!==sheet.id);log(`Removed ${tk.name} from the board`);sheet=null;pendingDel=false}else pendingDel=true;break;
     case"rmimg":{const tk=tok();if(tk)delete tk.img;break}
     case"preset":{const tk=newTok(PRESETS[+ds.i]);S.tokens.push(tk);S.example=false;sheet={kind:"tok",id:tk.id,sel:0,amt:1,dmg:1,bp:0,bt:0,ec:0};break}
-    case"deckload":{const d=D.find(x=>x.id===ds.id);if(!d)break;S={...fresh(S.start),tokens:d.tokens.map(newTok)};log(`Loaded deck ${d.name}`);sheet=null;break}
+    case"deckload":{const d=D.find(x=>x.id===ds.id);if(!d)break;S={...fresh(S.start),tokens:d.tokens.map(newTok),deck:{id:d.id,name:d.name}};log(`Loaded deck ${d.name}`);sheet=null;break}
     case"deckdel":if(pendingDeck===ds.id){D=D.filter(x=>x.id!==ds.id);pendingDeck=null}else pendingDeck=ds.id;break;
     case"bkphotos":sheet.photos=document.getElementById("bk-photos").checked;sheet.show=false;sheet.msg="";break;
     case"bkcopy":{const txt=backupJSON(sheet.photos);
@@ -1422,7 +1425,7 @@ document.addEventListener("submit",e=>{
     sheet={kind:"decks"};render();return}
   if(id==="df"){const name=document.getElementById("deck-name").value.trim();if(!name||!S.tokens.length)return;
     const ex=D.find(d=>d.name.toLowerCase()===name.toLowerCase());
-    const deck={id:ex?.id||nid(),name,tokens:S.tokens.map(typeOf),perms:S.perms.length?S.perms.map(permCopy):(ex?.perms||[])};
+    const deck={id:ex?.id||nid(),name,tokens:S.tokens.map(typeOf),perms:S.perms.length?S.perms.map(permCopy):(ex?.perms||[])};S.deck={id:deck.id,name};
     if(ex)D[D.indexOf(ex)]=deck;else D.push(deck);
     document.getElementById("deck-name").value="";render();return}
   if(id==="lf"){const el=document.getElementById("life-in"),n=parseInt(el.value,10);if(!Number.isFinite(n))return;
