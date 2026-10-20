@@ -229,6 +229,28 @@ html.rm .shake{animation:shfade .3s}@keyframes shfade{0%,100%{outline:0}30%,70%{
 @keyframes glow{50%{box-shadow:0 0 0 2px var(--ink),0 0 4px 0 var(--brass)}}html.rm .btn.glow{animation:none}
 .bar .in.phmode{grid-template-columns:auto 1fr 1.3fr}.bar .in.phmode.noatk{grid-template-columns:auto 1fr}
 .btn.phnext{background:var(--felt-3);border-color:var(--brass);color:var(--brass)}.btn.phnext.start{background:var(--brass);color:var(--brass-ink)}
+.pcrow{display:flex;flex-wrap:wrap;gap:6px;background:none;border:0;padding:0;text-align:left}
+.sw2 .switch{width:100%}
+.pcb{font-size:13px;border:1px solid var(--line);background:var(--felt-2);border-radius:999px;padding:3px 10px;color:var(--muted)}.pcb b{color:var(--ink)}
+.pcb.bad{border-color:var(--danger);color:var(--danger)}.pcb.bad b{color:var(--danger)}
+.pclist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.pcitem{display:flex;justify-content:space-between;align-items:center;gap:6px;background:var(--felt);border:1px solid var(--line);border-radius:10px;padding:6px 8px;font-size:14px;min-width:0}
+.pcitem output{min-width:2ch;text-align:center;font-weight:700}.pcitem.lethal{border-color:var(--danger)}.pcitem.lethal output{color:var(--danger)}
+.nudge.bad{border-color:var(--danger);color:var(--danger)}
+.turnbar{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px;min-height:32px}.turnbar b{font-size:18px}
+.stormc{display:flex;align-items:center;gap:8px}.stormc .step{gap:8px}.stormc .step button{width:30px;height:30px}
+.quick .use{font-size:12.5px;white-space:nowrap}
+.usebtn{display:grid;gap:2px;height:auto;padding:10px 12px;text-align:left}.usebtn small{font-size:12px;font-weight:500;opacity:.8}
+.copies{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.copies .sec{flex:1 1 100%}.copies .ghost{flex:1}
+.diceres{display:grid;place-items:center;gap:2px;min-height:120px;background:var(--felt);border:1px solid var(--line);border-radius:12px}
+.diceres small{font-size:13px;color:var(--muted)}.diceres b{font-family:var(--f-display);font-size:56px;line-height:1;color:var(--brass)}
+.diceres b.a{animation:dpopa .25s ease-out}.diceres b.b{animation:dpopb .25s ease-out}
+@keyframes dpopa{from{scale:.6;opacity:.3}to{scale:1;opacity:1}}@keyframes dpopb{from{scale:.6;opacity:.3}to{scale:1;opacity:1}}
+html.rm .diceres b{animation:none}
+.dicegrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.dicegrid.two{grid-template-columns:repeat(auto-fit,minmax(0,1fr));grid-auto-flow:column}
+.gsum b{font-size:20px}
+.lchart{width:100%;height:auto;background:var(--felt);border:1px solid var(--line);border-radius:10px}
+.lchart .lline{fill:none;stroke:var(--brass);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}.lchart .lbase{stroke:var(--muted);stroke-width:1;stroke-dasharray:4 4;opacity:.6}.lchart .ldot{fill:var(--brass)}
+.qrbox{display:grid;justify-items:center;gap:6px}.qr{width:min(260px,100%);background:#fff;padding:8px;border-radius:10px}.qr svg{display:block;width:100%;height:auto}
 .switch small{font-size:11.5px;color:var(--muted)}
 @media (max-width:380px){.mod.sw2{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){.switch .knob,.switch .knob::after{transition:none}}
@@ -372,7 +394,7 @@ let uid=1;const nid=()=>"t"+(Date.now().toString(36))+(uid++);
 /* the parts of a token that define its type (no counts) */
 const typeOf=t=>({name:t.name,p:t.p,t:t.t,col:t.col,text:t.text,art:t.art,creature:t.creature,kw:{...t.kw},bP:t.bP||0,bT:t.bT||0,ench:!!t.ench,emblem:!!t.emblem,...(t.img?{img:t.img}:{}),...(t.frame?{frame:t.frame}:{})});
 const newTok=def=>({...typeOf(def),id:nid(),stacks:[]});
-const fresh=start=>({deck:null,perms:[],ph:null,pdone:{},nudge:null,cmdN:3,cmd:[0,0,0,0,0],opp:["Opponent 1","Opponent 2","Opponent 3","Opponent 4","Opponent 5"],defAtk:false,haste:false,tough:false,tokens:[],aP:0,aT:0,eP:0,eT:0,dbl:0,life:start,start,lastAtk:null,log:[],turn:{e:0,d:0,s:0},example:false});
+const fresh=start=>({pc:{poison:0,energy:0,exp:0,rad:0},monarch:false,init:false,turnNo:0,storm:0,st:{t0:Date.now(),made:0,died:0,sac:0,dmg:0,maxTok:0,life:[[0,start]]},deck:null,perms:[],ph:null,pdone:{},nudge:null,cmdN:3,cmd:[0,0,0,0,0],opp:["Opponent 1","Opponent 2","Opponent 3","Opponent 4","Opponent 5"],defAtk:false,haste:false,tough:false,tokens:[],aP:0,aT:0,eP:0,eT:0,dbl:0,life:start,start,lastAtk:null,log:[],turn:{e:0,d:0,s:0},example:false});
 function example(){
   const P=n=>newTok(PRESETS.find(p=>p.name===n));
   const s=P("Soldier"); s.stacks=[{n:4,tapped:false,sick:false,c:0},{n:3,tapped:true,sick:false,c:0},{n:2,tapped:false,sick:true,c:0},{n:2,tapped:false,sick:false,c:1}];
@@ -381,7 +403,7 @@ function example(){
   return{...fresh(20),tokens:[s,g,tr],aP:1,aT:1,example:true};
 }
 function norm(o){
-  o.deck??=null;o.perms??=[];o.ph??=null;o.pdone??={};o.nudge??=null;o.perms.forEach(p=>{p.rem??=[];p.id??=nid()});
+  o.pc??={poison:0,energy:0,exp:0,rad:0};o.monarch??=false;o.init??=false;o.turnNo??=0;o.storm??=0;o.st??={t0:Date.now(),made:0,died:0,sac:0,dmg:0,maxTok:0,life:[[0,o.life??o.start??20]]};o.deck??=null;o.perms??=[];o.ph??=null;o.pdone??={};o.nudge??=null;o.perms.forEach(p=>{p.rem??=[];p.id??=nid()});
   o.cmdN??=3;o.cmd??=[0,0,0,0,0];o.opp??=[1,2,3,4,5].map(i=>"Opponent "+i);o.defAtk??=false;o.haste??=false;o.tough??=false;o.eP??=0;o.eT??=0;o.dbl??=0;o.aP??=0;o.aT??=0;o.start??=20;o.life??=o.start;o.log??=[];o.lastAtk??=null;o.turn??={e:0,d:0,s:0};
   o.tokens.forEach(t=>{t.ench??=false;t.emblem??=false;t.kw??=kwFrom(t.text);t.bP??=0;t.bT??=0;t.stacks??=[];t.id??=nid()});
   return o;
@@ -408,6 +430,12 @@ const FEAT=[
   ["Triggers","skip","Skip phases with no triggers","Main phase always stops",true],
   ["Triggers","nudge","Nudge before moving on","When a trigger isn't marked Done or Skip",true],
   ["Triggers","theirs","On their turns chip","Your triggers that fire on opponents' turns",true],
+  ["Life & combat","pcount","Player counters","Poison, energy, experience, rad, monarch, initiative",true],
+  ["Board","turnno","Turn counter","Which turn of yours it is",true],
+  ["Board","storm","Spells cast this turn","A counter for storm and similar cards",false],
+  ["Board","tokact","Token abilities","One-tap Food, Treasure, Clue and other sacrifice abilities",true],
+  ["Board","summary","Game summary","Recap when you start a new game",true],
+  ["Feel","wake","Keep screen on","Stops the screen from sleeping while the app is open",false],
   ["Feel","vib","Vibrate on tap","Short buzz on Android",false],
   ["Feel","rmotion","Reduce motion","Fades instead of movement",false]];
 UI.f??={};for(const f of FEAT)UI.f[f[1]]??=f[4];
@@ -560,7 +588,7 @@ function atkDamage(A){if(!A)return 0;if(!A.att)return A.p;
   return A.att.reduce((a,g,i)=>{const b=A.bl?.[i]||0;return a+(g.k-b)*g.p+b*throughEach(A,i)},0)+(A.x||0)}
 const blockedN=A=>A?.att?A.att.reduce((a,g,i)=>a+(A.bl?.[i]||0),0):0;
 function sac(t,stack,n){if(!stack||n<=0)return 0;n=Math.min(n,stack.n);stack.n-=n;merge(t);S.turn.s+=n;if(t.creature)S.turn.d+=n;return n}
-function create(t,n,ec=0){const k=t.emblem?n:n*mult();t.stacks.push({n:k,tapped:false,sick:t.creature&&!S.haste,c:t.creature?ec:0,d:0,dt:false,mp:0,mt:0});merge(t);S.example=false;if(!t.emblem)S.turn.e+=k;
+function create(t,n,ec=0,tapped=false){const k=t.emblem?n:n*mult();t.stacks.push({n:k,tapped,sick:t.creature&&!S.haste,c:t.creature?ec:0,d:0,dt:false,mp:0,mt:0});merge(t);S.example=false;if(!t.emblem)S.turn.e+=k;
   if(t.emblem){logAdd("mk"+t.id,k,"Gained",t.name+" emblem");return}
   if(ec&&t.creature)log(`Made ${k} ${t.name} with ${ec} +1/+1 counter${ec>1?"s":""} each`);else logAdd("mk"+t.id,k,"Made",t.name)}
 /* state-based actions: 0 toughness, or lethal damage marked */
@@ -647,7 +675,7 @@ function phaseTriggers(text,type){
   TRIG_MEMO.set(key,out);return out;
 }
 /* checklist items for a phase. mine=true: my turn (your + each); mine=false: their turns (each + opponent's) */
-function phaseItems(ph,mine=true){const out=[];
+function phaseItems(ph,mine=true){const out=mine?sysItems(ph):[];
   for(const p of S.perms){
     phaseTriggers(p.text,p.type).forEach((t,j)=>{if(t.ph!==ph)return;if(mine?t.who==="opp":t.who==="you")return;out.push({key:p.id+":"+j,pid:p.id,name:p.name,eff:t.eff,cond:t.cond,tba:t.tba})});
     if(mine)(p.rem||[]).forEach((r,j)=>{if(r.ph===ph)out.push({key:p.id+":r"+j,pid:p.id,name:p.name,eff:r.note,rem:true})});
@@ -714,6 +742,89 @@ function permSearch(q){
     }catch(e){if(e.name==="AbortError")return;psShow('<div class="note">Couldn\'t reach Scryfall right now. Try again in a moment.</div>')}
   },450);
 }
+/* ---------- turn bookkeeping shared by My turn / End turn / phase tracker ---------- */
+function commitAtk(){if(S.lastAtk&&!S.lastAtk.counted){S.st.dmg+=atkDamage(S.lastAtk);S.lastAtk.counted=true}}
+function startMyTurn(){commitAtk();for(const tk of S.tokens){tk.stacks.forEach(s=>{s.tapped=false;s.sick=false});merge(tk)}
+  S.lastAtk=null;S.pdone={};S.nudge=null;S.turnNo++;S.storm=0;S.st.life.push([S.turnNo,S.life])}
+function endMyTurn(){commitAtk();for(const tk of S.tokens){tk.stacks.forEach(s=>{s.d=0;s.dt=false});merge(tk)}
+  S.lastAtk=null;S.eP=0;S.eT=0;S.st.made+=S.turn.e;S.st.died+=S.turn.d;S.st.sac+=S.turn.s;S.turn={e:0,d:0,s:0};S.storm=0;S.ph=null;S.pdone={};S.nudge=null}
+/* player counters and designations (CR 725 monarch, 726 initiative, 728 rad) */
+const PCS=[["poison","Poison"],["energy","Energy"],["exp","Experience"],["rad","Rad"]];
+function pcHTML(){if(!F("pcount"))return "";
+  const bits=PCS.filter(([k])=>S.pc[k]).map(([k,l])=>`<span class="pcb${k==="poison"&&S.pc.poison>=10?" bad":""}">${l} <b>${S.pc[k]}</b></span>`);
+  if(S.monarch)bits.push(`<span class="pcb">Monarch</span>`);if(S.init)bits.push(`<span class="pcb">Initiative</span>`);
+  if(!bits.length)return "";
+  return `<button class="pcrow" data-a="lifesheet" aria-label="Player counters. Tap to change">${bits.join("")}${S.pc.poison>=10?`<span class="pcb bad">10+ poison: you lose</span>`:""}</button>`}
+function sysItems(ph){const out=[];
+  if(F("pcount")){
+    if(ph==="end"&&S.monarch)out.push({key:"sys:mon",name:"Monarch",eff:"Draw a card.",sys:1});
+    if(ph==="upkeep"&&S.init)out.push({key:"sys:init",name:"Initiative",eff:"Venture into Undercity.",sys:1});
+    if(ph==="main1"&&S.pc.rad>0)out.push({key:"sys:rad",name:`Rad counters (${S.pc.rad})`,eff:`Mill ${S.pc.rad}. For each nonland card milled, lose 1 life and remove a rad counter.`,sys:1});
+  }return out}
+/* token sacrifice abilities read from the token's text, e.g. Food "{2}, {T}, Sacrifice this artifact: You gain 3 life." */
+function sacAb(t){
+  for(const ln of (t.text||"").split("\n")){
+    const i=ln.indexOf(":");if(i<0)continue;const cost=ln.slice(0,i),eff=ln.slice(i+1).trim();
+    if(!/Sacrifice (this|it\b|CARDNAME)/i.test(cost)||/Sacrifice (another|an?|two|X)\b/i.test(cost))continue;
+    const tap=/\{T\}/.test(cost),mana=(cost.match(/\{[^T}]+\}/g)||[]).join("");let m,kind="other",short="Use",life=0;
+    if((m=eff.match(/^You gain (\d+) life\.?$/i))){kind="life";life=+m[1];short=`+${life} life`}
+    else if(/^Add /i.test(eff)){kind="mana";short="Mana"}
+    else if(/^Draw a card\.?$/i.test(eff)){kind="draw";short="Draw"}
+    return {tap,mana,eff,kind,life,short,cost:cost.trim()}}
+  return null}
+function useStack(t,ab){return ab.tap?t.stacks.find(s=>s.n>0&&!s.tapped):(t.stacks.find(s=>s.n>0&&s.tapped)||t.stacks.find(s=>s.n>0))}
+function useAb(t){const ab=sacAb(t);if(!ab)return;const st=useStack(t,ab);if(!st)return;
+  sac(t,st,1);
+  if(ab.kind==="life"){logAdd("use"+t.id,1,"Sacrificed",t.name);setLife(S.life+ab.life)}
+  else logAdd("use"+t.id,1,"Sacrificed",`${t.name} (${ab.kind==="mana"?"mana":ab.kind==="draw"?"draw a card":ab.eff.replace(/\.$/,"")})`)}
+/* random numbers without bias */
+function rnd(n){const a=new Uint32Array(1),lim=Math.floor(4294967296/n)*n;do{crypto.getRandomValues(a)}while(a[0]>=lim);return a[0]%n}
+/* keep the screen awake while the app is open (Wake Lock API, Chrome on Android) */
+let wakeL=null,wakeBusy=false;
+async function wakeSync(){if(wakeBusy)return;wakeBusy=true;try{
+  if(UI.f.wake&&document.visibilityState==="visible"&&navigator.wakeLock){if(!wakeL){wakeL=await navigator.wakeLock.request("screen");wakeL.addEventListener("release",()=>{wakeL=null})}}
+  else if(wakeL){const l=wakeL;wakeL=null;await l.release()}}catch(e){wakeL=null}finally{wakeBusy=false}}
+document.addEventListener("visibilitychange",wakeSync);
+/* game history (kept per phone, not part of undo) */
+const GKEY="tokenboard-test.games.v1";let GH=load(GKEY);if(!Array.isArray(GH))GH=[];
+const saveGH=()=>{try{localStorage.setItem(GKEY,JSON.stringify(GH.slice(-30)))}catch(e){}};
+function gameSummary(){const st=S.st;return {id:nid(),at:Date.now(),mins:Math.max(1,Math.round((Date.now()-(st.t0||Date.now()))/60000)),deck:S.deck?.name||null,turns:S.turnNo,
+  made:st.made+S.turn.e,died:st.died+S.turn.d,sac:st.sac+S.turn.s,dmg:st.dmg+(S.lastAtk&&!S.lastAtk.counted?atkDamage(S.lastAtk):0),maxTok:st.maxTok,
+  start:S.start,life:[...st.life,[S.turnNo+0.5,S.life]].slice(-60),cmd:Math.max(0,...S.cmd.slice(0,S.cmdN)),poison:S.pc.poison}}
+const played=()=>S.turnNo>0||S.st.made+S.turn.e>0||S.log.length>2;
+function lifeChart(pts,start){if(!pts||pts.length<2)return "";const W=300,H=90,P=6;
+  const ys=pts.map(p=>p[1]),lo=Math.min(start,...ys)-2,hi=Math.max(start,...ys)+2,xs=pts.map(p=>p[0]),x0=Math.min(...xs),x1=Math.max(...xs)||1;
+  const X=x=>P+(W-2*P)*(x-x0)/((x1-x0)||1),Y=y=>H-P-(H-2*P)*(y-lo)/((hi-lo)||1);
+  return `<svg class="lchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Life over the game, from ${pts[0][1]} to ${pts[pts.length-1][1]}">
+    <line x1="${P}" x2="${W-P}" y1="${Y(start)}" y2="${Y(start)}" class="lbase"/>
+    <polyline points="${pts.map(p=>X(p[0]).toFixed(1)+","+Y(p[1]).toFixed(1)).join(" ")}" class="lline"/>
+    <circle cx="${X(pts[pts.length-1][0])}" cy="${Y(pts[pts.length-1][1])}" r="3.5" class="ldot"/></svg>`}
+function summaryHTML(g){const d=new Date(g.at);
+  return `<div class="note">${d.toLocaleDateString([], {month:"short",day:"numeric"})} · ${d.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"})}${g.deck?` · ${esc(g.deck)}`:""} · about ${g.mins} min</div>
+  <div class="sum gsum"><div><b>${g.turns}</b><span>Your turns</span></div><div><b>${g.made}</b><span>Tokens made</span></div><div><b>${g.maxTok}</b><span>Most at once</span></div><div class="hot"><b>${g.dmg}</b><span>Combat damage</span></div></div>
+  <div class="sum gsum"><div><b>${g.died}</b><span>Died</span></div><div><b>${g.sac}</b><span>Sacrificed</span></div><div><b>${g.life[g.life.length-1][1]}</b><span>Final life</span></div><div><b>${g.cmd}</b><span>Most cmdr dmg</span></div></div>
+  ${g.life.length>1?`<p class="sec">Life over the game</p>${lifeChart(g.life,g.start)}<div class="note">Points are taken at the start of each of your turns. The dashed line is your starting life (${g.start}).</div>`:""}`}
+/* ---------- deck sharing: the preset travels inside the link itself, compressed ---------- */
+const b64u=bytes=>{let s="";for(let i=0;i<bytes.length;i+=8192)s+=String.fromCharCode.apply(null,bytes.subarray(i,i+8192));return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")};
+const unb64u=str=>{const s=atob(str.replace(/-/g,"+").replace(/_/g,"/"));const a=new Uint8Array(s.length);for(let i=0;i<s.length;i++)a[i]=s.charCodeAt(i);return a};
+async function packDeck(d){const o={v:1,n:d.name,t:d.tokens.map(t=>{const x={...t};if(x.img&&x.img.startsWith("data:"))delete x.img;return x}),p:(d.perms||[]).map(p=>({name:p.name,type:p.type,text:p.text,cre:!!p.cre,ind:!!p.ind,rem:p.rem||[]}))};
+  const raw=new TextEncoder().encode(JSON.stringify(o));
+  if(window.CompressionStream){const buf=await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream("deflate-raw"))).arrayBuffer();return "z."+b64u(new Uint8Array(buf))}
+  return "j."+b64u(raw)}
+async function unpackDeck(str){const [k,data]=[str.slice(0,2),str.slice(2)];let bytes=unb64u(data);
+  if(k==="z."){if(!window.DecompressionStream)throw new Error("old browser");bytes=new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer())}
+  const o=JSON.parse(new TextDecoder().decode(bytes));if(o.v!==1||!o.n||!Array.isArray(o.t))throw new Error("bad");return o}
+let qrLib=null;
+function loadQR(){if(qrLib)return qrLib;qrLib=new Promise((ok,no)=>{const sc=document.createElement("script");sc.src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js";sc.onload=()=>ok(window.qrcode);sc.onerror=()=>{qrLib=null;no()};document.head.appendChild(sc)});return qrLib}
+async function shareOpen(d){sheet={kind:"share",id:d.id,link:"",qr:"",err:""};render();
+  try{const code=await packDeck(d);const url=location.origin+location.pathname+"#deck="+code;if(sheet?.kind!=="share")return;sheet.link=url;render();
+    if(url.length>2900){sheet.qr="big";render();return}
+    if(!navigator.onLine){sheet.qr="off";render();return}
+    const q=await loadQR();const g=q(0,"L");g.addData(url);g.make();if(sheet?.kind!=="share")return;sheet.qr=g.createSvgTag({cellSize:4,margin:2,scalable:true});render()}
+  catch(e){if(sheet?.kind==="share"){sheet.qr=sheet.link?"fail":"";if(!sheet.link)sheet.err="Couldn't make a link for this deck.";render()}}}
+async function checkShared(){const h=location.hash;if(!h.startsWith("#deck="))return;
+  try{const o=await unpackDeck(h.slice(6));history.replaceState(null,"",location.pathname+location.search);sheet={kind:"recv",o};render()}
+  catch(e){history.replaceState(null,"",location.pathname+location.search);sheet={kind:"recv",err:"This deck link is damaged or incomplete. Ask for it to be sent again."};render()}}
 function buffSummary(){const p=[];
   if(S.aP||S.aT)p.push(`Anthem ${sgn(S.aP)}/${sgn(S.aT)}`);
   if(S.eP||S.eT)p.push(`This turn ${sgn(S.eP)}/${sgn(S.eT)}`);
@@ -727,7 +838,7 @@ function setHTML(el,html){if(el.__h===html)return;
   for(const id in keep){const i=el.querySelector(`[id="${id}"]`);if(i&&!i.readOnly)i.value=keep[id]}}
 function render(){
   save();
-  const T=totals(),last=S.log[S.log.length-1];
+  const T=totals(),last=S.log[S.log.length-1];if(T.all>S.st.maxTok)S.st.maxTok=T.all;
   setHTML(document.getElementById("app"),`
   <header><h1>Token Board</h1><button class="ghost" data-a="menu">Menu</button></header>
   ${S.example?`<div class="note">Example board loaded. Moving over from the old version? Menu → Backup & restore. Otherwise start fresh from Menu → New game.</div>`:""}
@@ -735,6 +846,7 @@ function render(){
     ${F("life")?`<div class="lifebox"><span class="sec">Life</span><div class="step"><button data-a="life" data-v="-1" data-rep aria-label="Lose life">−</button><button class="lifetap" data-a="lifesheet" aria-label="Life ${S.life}. Tap to change by 5, 10, or set it">${S.life}</button><button data-a="life" data-v="1" data-rep aria-label="Gain life">+</button></div></div>`:""}
     <button class="buffbtn" data-a="buffs" aria-expanded="${UI.buffs}"><span class="sec">Buffs</span><span class="bline"><span class="bsum${buffSummary()?" on":""}">${buffSummary()||"None active"}</span><i>${UI.buffs?"Hide ▲":"Show ▼"}</i></span></button>
   </div>
+  ${pcHTML()}
   ${UI.buffs?`<div class="mods">
     <div class="mod"><label>Anthem · all creatures</label>
       <div class="pr"><i>P</i>${stepper("aP","anthem power")}</div>
@@ -758,6 +870,8 @@ function render(){
   ${S.lastAtk?`<div class="atk"><div><span>Attacking with ${S.lastAtk.n}${blockedN(S.lastAtk)?` · ${blockedN(S.lastAtk)} blocked`:""}</span>
       ${S.lastAtk.att?`<button class="atkbtn" data-a="blkopen">Mark blocked</button>`:""}</div><b>${atkDamage(S.lastAtk)} dmg</b></div>`:""}
   ${F("turnline")&&(S.turn.e||S.turn.d||S.turn.s)?`<div class="turnline"><span class="sec">This turn</span><span><b>${S.turn.e}</b> entered</span><span><b>${S.turn.d}</b> died</span><span><b>${S.turn.s}</b> sacrificed</span></div>`:""}
+  ${(F("turnno")&&S.turnNo)||F("storm")?`<div class="turnbar">${F("turnno")&&S.turnNo?`<span><span class="sec">Turn</span> <b>${S.turnNo}</b></span>`:"<span></span>"}
+    ${F("storm")?`<span class="stormc"><span class="sec">Spells cast</span><span class="step"><button data-a="storm" data-v="-1" aria-label="One fewer spell cast" ${S.storm?"":"disabled"}>−</button><output class="${S.storm?"on":""}">${S.storm}</output><button data-a="storm" data-v="1" data-rep aria-label="One more spell cast">+</button></span></span>`:""}</div>`:""}
   ${F("lastlog")&&last?`<button class="lastlog" data-a="logsheet"><span>${esc(last.m)}</span><em>Log</em></button>`:""}
   ${phaseHTML()}
   ${permsHTML()}
@@ -781,7 +895,8 @@ function render(){
         <button class="mk" data-a="mk1" data-id="${t.id}" aria-label="Add one ${esc(t.name)} emblem">+1</button></div>`
       :`<div class="quick">
         ${t.creature?`<button data-a="rm1" data-id="${t.id}" data-rep ${cnt(t)?"":"disabled"} aria-label="Remove one ${esc(t.name)}">−1</button>`
-          :`<button data-a="sac1" data-id="${t.id}" data-rep ${cnt(t)?"":"disabled"} aria-label="Sacrifice one ${esc(t.name)}">Sac</button>`}
+          :(()=>{const ab=F("tokact")&&sacAb(t);return ab?`<button class="use" data-a="use1" data-id="${t.id}" data-rep ${useStack(t,ab)?"":"disabled"} aria-label="Sacrifice one ${esc(t.name)}: ${esc(ab.eff)}">${esc(ab.short)}</button>`
+            :`<button data-a="sac1" data-id="${t.id}" data-rep ${cnt(t)?"":"disabled"} aria-label="Sacrifice one ${esc(t.name)}">Sac</button>`})()}
         <button data-a="tap1" data-id="${t.id}" data-rep ${t.stacks.some(s=>!s.tapped)?"":"disabled"}>Tap</button>
         <button class="mk" data-a="mk1" data-id="${t.id}" data-rep>+${mult()}</button>
       </div>`}</div>`).join("")}).join("")}
@@ -870,6 +985,7 @@ function sfSearch(q){
 }
 let installEvt=null;
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEvt=e;if(sheet?.kind==="menu")render()});
+window.addEventListener("load",()=>{wakeSync();checkShared()});window.addEventListener("hashchange",checkShared);
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 try{navigator.storage?.persist?.()}catch(e){}
 
@@ -931,7 +1047,7 @@ async function runImport(){
   render();
 }
 /* ---------- sheets ---------- */
-let pendingCT=null;let sheet=null,pendingDel=false,pendingReset=false,pendingDeck=null,pendingRestore=false,openKey=null,pendingImg=null;
+let pendingCT=null,pendingGH=false;let sheet=null,pendingDel=false,pendingReset=false,pendingDeck=null,pendingRestore=false,openKey=null,pendingImg=null;
 function padList(){const mine=new Set(S.perms.map(p=>p.name)),cd=S.deck&&D.find(x=>x.id===S.deck.id),fromD=cd?.perms||[];
   return cd?(fromD.length?`<p class="sec">From ${esc(cd.name)}</p><div class="permlist">${fromD.map(p=>{const on=mine.has(p.name);return `<button class="permrow" data-a="pdeck" data-k="${esc(p.name)}" ${on?"disabled":""}><b>${esc(p.name)}</b><small>${on?"On the battlefield":esc(permTags(p)||"no phase triggers")}</small></button>`}).join("")}</div>`
       :`<div class="note">${esc(cd.name)} has no saved trigger cards. Import its decklist again from Deck presets to pick them up, or search below.</div>`):""}
@@ -967,6 +1083,9 @@ function renderSheet(){
     <div class="makes">${(()=>{const mk=n=>`<button class="btn pri" data-a="make" data-n="${n}" aria-label="${t.emblem?"Add":"Make"} ${n}${S.dbl&&!t.emblem?`, ${n*mult()} with doublers`:""}">${t.emblem?"Add":"Make"} ${n}${S.dbl&&!t.emblem?`<small>→ ${n*mult()}</small>`:""}</button>`;
       return [1,5,10].map(mk).join("")+([1,5,10].includes(sheet.amt)?"":mk(sheet.amt))})()}</div>
     ${sheet.ec&&t.creature?`<div class="note">New ones enter with ${plural(sheet.ec,sheet.ec>1?"counters":"counter")}.</div>`:""}
+    ${(()=>{const ab=F("tokact")&&!t.emblem&&sacAb(t);if(!ab)return "";const ok=useStack(t,ab);
+      return `<button class="btn usebtn" data-a="usesh" data-rep ${ok?"":"disabled"}><b>Sacrifice 1: ${esc(ab.eff)}</b><small>${ab.mana||ab.tap?`Cost: ${esc(ab.cost)}`:"No extra cost"}${!ok&&ab.tap&&cnt(t)?" · all of them are tapped":""}</small></button>`})()}
+    ${!t.emblem?`<div class="copies"><span class="sec">Populate / copy</span><button class="ghost" data-a="copy" data-v="">Make a copy</button><button class="ghost" data-a="copy" data-v="tap">Copy, tapped</button></div>`:""}
     ${t.creature?sect("ctr","Counters & bonuses",sheet.ec?`new ones enter with ${sheet.ec}`:"",`
       ${st?`<div class="acts">
         <button class="btn" data-a="op" data-op="plus">+1/+1 on ${sheet.amt}</button>
@@ -1035,6 +1154,14 @@ function renderSheet(){
     <div class="lifebtns">${[-10,-5,-1,1,5,10].map(v=>`<button class="btn${v>0?" up":" down"}" data-a="life" data-v="${v}" data-rep aria-label="${v>0?"Gain":"Lose"} ${Math.abs(v)} life">${v>0?"+":"−"}${Math.abs(v)}</button>`).join("")}</div>
     <form id="lf" class="deckform"><input id="life-in" type="number" inputmode="numeric" placeholder="Set life to…" aria-label="Set life total"><button class="btn pri" type="submit">Set</button></form>
     <div class="note">Started at ${S.start}${diff?` · ${diff>0?"up":"down"} ${Math.abs(diff)} this game`:""}. Hold a button to repeat it.</div>
+    ${F("pcount")?`<p class="sec">Player counters</p>
+    <div class="pclist">${PCS.map(([k,l])=>`<div class="pcitem${k==="poison"&&S.pc.poison>=10?" lethal":""}"><span>${l}</span><div class="step"><button data-a="pc" data-k="${k}" data-v="-1" data-rep aria-label="Fewer ${l} counters" ${S.pc[k]?"":"disabled"}>−</button><output>${S.pc[k]}</output><button data-a="pc" data-k="${k}" data-v="1" data-rep aria-label="More ${l} counters">+</button></div></div>`).join("")}</div>
+    ${S.pc.poison>=10?`<div class="nudge bad">10 or more poison counters: you lose the game (rule 704.5c).</div>`:""}
+    <div class="sw2">
+      <button class="switch" data-a="desig" data-k="monarch" role="switch" aria-checked="${S.monarch}"><span class="knob"></span><span><b>Monarch</b><small>Draw a card at your end step</small></span></button>
+      <button class="switch" data-a="desig" data-k="init" role="switch" aria-checked="${S.init}"><span class="knob"></span><span><b>Initiative</b><small>Venture into Undercity at your upkeep</small></span></button>
+    </div>
+    ${S.pc.rad?`<div class="note">Rad: at the start of your first main phase, mill ${S.pc.rad}. For each nonland card milled, lose 1 life and remove a rad counter.</div>`:""}`:""}
     ${F("cmd")?`<p class="sec">Commander damage · opponents</p>
     <div class="seg" style="grid-template-columns:repeat(5,1fr)" role="group" aria-label="Number of opponents">${[1,2,3,4,5].map(v=>`<button data-a="cmdn" data-v="${v}" class="${S.cmdN===v?"on":""}" aria-label="${v} opponent${v>1?"s":""}">${v}</button>`).join("")}</div>
     <div class="cmdlist">${S.opp.slice(0,S.cmdN).map((nm,i)=>`<div class="cmdrow${S.cmd[i]>=21?" lethal":""}">
@@ -1042,6 +1169,34 @@ function renderSheet(){
       <div class="step"><button data-a="cmd" data-i="${i}" data-v="-1" data-rep aria-label="Less commander damage from ${esc(nm)}" ${S.cmd[i]?"":"disabled"}>−</button><output>${S.cmd[i]}</output><button data-a="cmd" data-i="${i}" data-v="1" data-rep aria-label="More commander damage from ${esc(nm)}">+</button></div>
       ${S.cmd[i]>=21?`<small>21+ combat damage from one commander: you lose</small>`:""}</div>`).join("")}</div>
     <div class="note">Tap + for each point of combat damage an opponent's commander deals you; your life drops with it. − undoes a mistake and gives the life back. Tap a name to rename it.</div>`:""}`;
+  } else if(sheet.kind==="dice"){
+    const R=sheet.res;
+    body=head("Dice & coin",`<button class="ghost" data-a="menu">Back</button>${done}`)+`
+    <div class="diceres${R?"":" empty"}" aria-live="polite">${R?`<small>${esc(R.what)}</small><b class="${R.n%2?"a":"b"}">${esc(R.val)}</b>`:`<small>Tap something below</small>`}</div>
+    <div class="dicegrid">${[4,6,8,10,12,20].map(n=>`<button class="btn" data-a="roll" data-v="${n}">d${n}</button>`).join("")}</div>
+    <div class="dicegrid two"><button class="btn" data-a="roll" data-v="coin">Flip a coin</button><button class="btn pri" data-a="roll" data-v="first">Who goes first?</button></div>
+    <div class="note">"Who goes first" picks between you and the ${S.cmdN} opponent${S.cmdN>1?"s":""} named on the life screen. Results go in the game log.</div>`;
+  } else if(sheet.kind==="summary"){
+    body=head(sheet.fresh?"Last game":"Game recap",`${sheet.fresh?"":`<button class="ghost" data-a="games">Back</button>`}${done}`)+summaryHTML(sheet.g)+
+    (sheet.fresh?`<div class="note">Saved in Menu → Game history. The new game is ready.</div>`:"");
+  } else if(sheet.kind==="games"){
+    body=head("Game history",`<button class="ghost" data-a="menu">Back</button>${done}`)+`
+    ${GH.length?`<div class="permlist">${GH.slice().reverse().map(g=>`<button class="permrow" data-a="game" data-id="${g.id}"><b>${new Date(g.at).toLocaleDateString([], {month:"short",day:"numeric"})}${g.deck?` · ${esc(g.deck)}`:""}</b><small>${g.turns} turns · ${g.made} tokens made · ${g.dmg} combat damage · ended at ${g.life[g.life.length-1][1]} life</small></button>`).join("")}</div>
+    <button class="btn${pendingGH?" warnbtn":""}" data-a="gclear">${pendingGH?"Tap again to clear history":"Clear history"}</button>`:`<div class="note">No games yet. A recap is saved each time you start a new game.</div>`}
+    <div class="note">Keeps your last 30 games on this phone.</div>`;
+  } else if(sheet.kind==="share"){
+    const d=D.find(x=>x.id===sheet.id);
+    body=head("Share "+(d?esc(d.name):"deck"),`<button class="ghost" data-a="decks">Back</button>${done}`)+`
+    ${sheet.err?`<div class="nudge">${esc(sheet.err)}</div>`:!sheet.link?`<div class="note">Making the link…</div>`:`
+    <div class="note">The whole preset (${d?plural(d.tokens.length,d.tokens.length>1?"tokens":"token"):""}${d?.perms?.length?`, ${plural(d.perms.length,d.perms.length>1?"trigger cards":"trigger card")}`:""}) is packed into the link. When your friend opens it on their phone, Token Board offers to add it to their deck presets. Custom photos aren't included.</div>
+    <div class="dicegrid two">${navigator.share?`<button class="btn pri" data-a="shnative">Share…</button>`:""}<button class="btn" data-a="shcopy">${sheet.copied?"Copied ✓":"Copy link"}</button></div>
+    <div class="qrbox">${sheet.qr==="big"?`<div class="note">This deck is too big for a QR code. Share the link instead.</div>`:sheet.qr==="off"?`<div class="note">The QR code needs internet the first time. The link works offline.</div>`:sheet.qr==="fail"?`<div class="note">Couldn't make a QR code right now. The link still works.</div>`:sheet.qr?`<div class="qr">${sheet.qr}</div><div class="note">Scan with a phone camera.</div>`:`<div class="note">Making the QR code…</div>`}</div>`}`;
+  } else if(sheet.kind==="recv"){
+    const o=sheet.o;
+    body=head("Shared deck",done)+(sheet.err?`<div class="nudge">${esc(sheet.err)}</div>`:`
+    <div class="oracle"><b>${esc(o.n)}</b>\n${esc(o.t.map(t=>t.name).join(", "))}${o.p?.length?`\n\nTrigger cards: ${esc(o.p.map(p=>p.name).join(", "))}`:""}</div>
+    <button class="btn pri" data-a="recvadd">Add to my deck presets</button>
+    <div class="note">${D.some(d=>d.name.toLowerCase()===o.n.toLowerCase())?`You already have a deck called ${esc(o.n)}, so this one will be saved as "${esc(o.n)} (shared)". `:""}Nothing on your board changes until you load it.</div>`);
   } else if(sheet.kind==="padd"){
     const cd=S.deck&&D.find(x=>x.id===S.deck.id);
     body=head("Add a permanent",done)+`
@@ -1103,6 +1258,8 @@ function renderSheet(){
       <button data-a="wipesheet"><b>Board wipe</b><span>Remove all creatures, keep everything else</span></button>
       <button data-a="decks"><b>Deck presets</b><span>${D.length?plural(D.length,D.length>1?"saved decks":"saved deck"):"Save this board's tokens to load next game"}</span></button>
       <button data-a="logsheet"><b>Game log</b><span>${S.log.length?`${S.log.length} entries this game`:"Nothing yet"}</span></button>
+      <button data-a="dice"><b>Dice & coin</b><span>Roll dice, flip a coin, pick who goes first</span></button>
+      ${GH.length?`<button data-a="games"><b>Game history</b><span>${plural(GH.length,GH.length>1?"saved games":"saved game")}</span></button>`:""}
       <button data-a="feats"><b>Features</b><span>Turn parts of the app on or off</span></button>
       <button data-a="colors"><b>Colors</b><span>${(themeOf(TH.name)||THEMES.forest).label} theme${TH.accent?" · custom accent":""}</span></button>
       ${installEvt?`<button data-a="install"><b>Install app</b><span>Add Token Board to your app drawer</span></button>`:""}
@@ -1121,7 +1278,7 @@ function renderSheet(){
       <button class="btn" type="submit" ${S.tokens.length?"":"disabled"}>Save board</button></form>
     <div class="note">Saves the token types on the board now (stats, abilities, photos), not the counts.</div>
     <div class="stacks">${D.length?D.map(d=>`<div class="arow"><div class="who"><b>${esc(d.name)}</b><small>${esc(d.tokens.map(t=>t.name).join(", "))}</small></div>
-      <div class="row"><button class="ghost" data-a="deckload" data-id="${d.id}">Load</button><button class="ghost${pendingDeck===d.id?" warn":""}" data-a="deckdel" data-id="${d.id}">${pendingDeck===d.id?"Tap again":"Delete"}</button></div></div>`).join("")
+      <div class="row"><button class="ghost" data-a="deckload" data-id="${d.id}">Load</button><button class="ghost" data-a="share" data-id="${d.id}">Share</button><button class="ghost${pendingDeck===d.id?" warn":""}" data-a="deckdel" data-id="${d.id}">${pendingDeck===d.id?"Tap again":"Delete"}</button></div></div>`).join("")
       :`<div class="note">No decks yet. Set up a board, then save it here.</div>`}</div>
     ${D.length?`<div class="note">Load starts a new game with that deck's tokens at 0. Undo brings back the old board.</div>`:""}`;
   } else if(sheet.kind==="imp"){
@@ -1212,7 +1369,7 @@ function applyOp(t,op){
 }
 
 /* actions that only change what's on screen, not the board */
-const VIEW=new Set(["padd","popen","ptheirs","tenew","teedit","telight","teframe","tecancel","tesave","tedel","feats","feat","featreset","wipesheet","impopen","impgo","imptog","impall","impnone","lifesheet","grp","buffs","sect","arrange","open","addsheet","close","sel","amt","amtAll","undo","atkopen","atkset","atkmax","atkall","atknone","edit","editback","menu","decks","logsheet","backup","bkcopy","bksave","bkphotos","deckdel","colors","theme","accent","accentreset","dmgamt","dttog","blkopen","bon","ecamt","install"]);
+const VIEW=new Set(["dice","roll","games","game","gclear","share","shnative","shcopy","recvadd","padd","popen","ptheirs","tenew","teedit","telight","teframe","tecancel","tesave","tedel","feats","feat","featreset","wipesheet","impopen","impgo","imptog","impall","impnone","lifesheet","grp","buffs","sect","arrange","open","addsheet","close","sel","amt","amtAll","undo","atkopen","atkset","atkmax","atkall","atknone","edit","editback","menu","decks","logsheet","backup","bkcopy","bksave","bkphotos","deckdel","colors","theme","accent","accentreset","dmgamt","dttog","blkopen","bon","ecamt","install"]);
 function act(ds,held){
   const a=ds.a,t=S.tokens.find(x=>x.id===ds.id);
   if(!held&&!VIEW.has(a)&&!(a==="reset"&&!pendingReset)&&!(a==="deltype"&&!pendingDel)&&!(a==="bkrestore"&&!pendingRestore))snap();
@@ -1221,6 +1378,7 @@ function act(ds,held){
   if(a!=="deckdel")pendingDeck=null;
   if(a!=="bkrestore")pendingRestore=false;
   if(a!=="tedel")pendingCT=null;
+  if(a!=="gclear")pendingGH=false;
   const tok=()=>S.tokens.find(x=>x.id===sheet?.id);
   switch(a){
     case"mod":{const k=ds.k;S[k]=Math.max(-20,Math.min(30,S[k]+ +ds.v));
@@ -1237,10 +1395,10 @@ function act(ds,held){
         gone+=n;parts.push(`${n} ${tk.name}`);tk.stacks.forEach(st=>{st.n=0});merge(tk)}
       if(F("phase")&&document.getElementById("wipe-perms")?.checked){const go=S.perms.filter(p=>p.cre&&(ex||!p.ind)),stay=S.perms.filter(p=>p.cre&&!ex&&p.ind);
         if(go.length){S.perms=S.perms.filter(p=>!go.includes(p));parts.push(go.map(p=>p.name).join(", "));gone+=go.length}kept+=stay.length}
-      if(!ex)S.turn.d+=gone;S.lastAtk=null;sheet=null;
+      if(!ex)S.turn.d+=gone;commitAtk();S.lastAtk=null;sheet=null;
       log(`Board wipe: ${gone?parts.join(", ")+(ex?" exiled":" died"):"no creatures removed"}${kept?` · ${kept} indestructible survived`:""}`);break}
     case"dbl":S.dbl=Math.max(0,Math.min(5,S.dbl+ +ds.v));log(`Doublers ×${mult()}`,"dbl");break;
-    case"reset":if(pendingReset){S=fresh(S.start);pendingReset=false;sheet=null}else pendingReset=true;break;
+    case"reset":if(pendingReset){let g=null;if(played()){g=gameSummary();GH.push(g);saveGH()}S=fresh(S.start);pendingReset=false;sheet=g&&F("summary")?{kind:"summary",g,fresh:true}:null}else pendingReset=true;break;
     case"startlife":S.start=+ds.v;break;
     case"undo":if(hist.length){S=hist.pop();if(sheet&&["atk"].includes(sheet.kind))sheet=null}break;
     case"mk1":create(t,1);break;
@@ -1254,24 +1412,44 @@ function act(ds,held){
     case"atknone":sheet.n={};break;
     case"atkgo":{let n=0,p=0;const att=[];
       for(const tk of S.tokens){for(const {s,k} of pick(tk,sheet.n[tk.id]||0)){const each=dmgOf(tk,s);n+=k;p+=k*each;att.push({id:tk.id,name:tk.name,k,p:each,c:s.c,mp:s.mp||0,mt:s.mt||0,tr:!!tk.kw.tr,dth:!!tk.kw.dth});if(!tk.kw.vig){s.n-=k;tk.stacks.push({...s,n:k,tapped:true})}}merge(tk)}
-      S.lastAtk={n,p,att,bl:{},bt:{},x:0};log(`Attacked with ${n} for ${p}`);sheet=null;break}
+      commitAtk();S.lastAtk={n,p,att,bl:{},bt:{},x:0};log(`Attacked with ${n} for ${p}`);sheet=null;break}
     case"phnext":{
-      if(!S.ph){for(const tk of S.tokens){tk.stacks.forEach(s=>{s.tapped=false;s.sick=false});merge(tk)}S.lastAtk=null;S.pdone={};S.nudge=null;S.ph=nextStop(null);
-        log(`My turn: untapped all, summoning sickness gone · ${PHL[S.ph]}`);break}
+      if(!S.ph){startMyTurn();S.ph=nextStop(null);
+        log(`Turn ${S.turnNo}: untapped all, summoning sickness gone · ${PHL[S.ph]}`);break}
       if(F("nudge")&&unmarked(S.ph)&&S.nudge!==S.ph){S.nudge=S.ph;break}
       S.nudge=null;const n=nextStop(S.ph);
-      if(n==="cleanup"){for(const tk of S.tokens){tk.stacks.forEach(s=>{s.d=0;s.dt=false});merge(tk)}S.lastAtk=null;S.eP=0;S.eT=0;S.turn={e:0,d:0,s:0};S.ph=null;S.pdone={};log("End of turn: damage removed, pumps ended");break}
+      if(n==="cleanup"){endMyTurn();log("End of turn: damage removed, pumps ended");break}
       S.ph=n;log(`Phase: ${PHL[n]}`,"phase");break}
     case"pmark":{if(S.pdone[ds.k])delete S.pdone[ds.k];else S.pdone[ds.k]=ds.v;if(S.ph&&!unmarked(S.ph))S.nudge=null;break}
     case"padd":sheet={kind:"padd"};PS.items=[];break;
+    case"pc":{const k=ds.k;S.pc[k]=Math.max(0,Math.min(999,S.pc[k]+ +ds.v));log(`${PCS.find(x=>x[0]===k)[1]} counters: ${S.pc[k]}${k==="poison"&&S.pc[k]>=10?" (10 or more: you lose)":""}`,"pc"+k);break}
+    case"desig":{const k=ds.k;S[k]=!S[k];log(k==="monarch"?(S.monarch?"You became the monarch":"You're no longer the monarch"):(S.init?"You took the initiative: venture into Undercity":"You no longer have the initiative"));break}
+    case"storm":S.storm=Math.max(0,S.storm+ +ds.v);log(`Spells cast this turn: ${S.storm}`,"storm");break;
+    case"use1":useAb(t);break;
+    case"usesh":useAb(tok());break;
+    case"copy":create(tok(),1,0,ds.v==="tap");break;
+    case"dice":sheet={kind:"dice",res:null};break;
+    case"roll":{const v=ds.v;let res;
+      if(v==="coin"){res={what:"Coin flip",val:rnd(2)?"Heads":"Tails"}}
+      else if(v==="first"){const ps=["You",...S.opp.slice(0,S.cmdN)];res={what:"Goes first",val:ps[rnd(ps.length)]}}
+      else{const n=+v;res={what:"d"+n,val:String(rnd(n)+1)}}
+      res.n=(sheet.res?.n||0)+1;sheet.res=res;log(`${res.what}: ${res.val}`);break}
+    case"games":sheet={kind:"games"};break;
+    case"game":{const g=GH.find(x=>x.id===ds.id);if(g)sheet={kind:"summary",g};break}
+    case"gclear":if(!pendingGH){pendingGH=true;break}GH=[];saveGH();pendingGH=false;break;
+    case"share":{const d=D.find(x=>x.id===ds.id);if(d)shareOpen(d);return false}
+    case"shnative":navigator.share?.({title:"Token Board deck",text:"Token Board deck preset",url:sheet.link}).catch(()=>{});break;
+    case"shcopy":navigator.clipboard?.writeText(sheet.link).then(()=>{if(sheet?.kind==="share"){sheet.copied=true;render()}}).catch(()=>{});break;
+    case"recvadd":{const o=sheet.o;let name=o.n;if(D.some(d=>d.name.toLowerCase()===name.toLowerCase()))name=(o.n+" (shared)").slice(0,40);
+      D.push({id:nid(),name,tokens:o.t,perms:(o.p||[]).map(p=>({...p,rem:p.rem||[]}))});sheet={kind:"decks"};break}
     case"ppick":{const raw=PS.items[+ds.i];if(!raw)break;const n=addPerm(permFrom(raw));sheet={kind:"perm",id:n.id};break}
     case"pdeck":{const cd=S.deck&&D.find(x=>x.id===S.deck.id),src=(cd?.perms||[]).find(x=>x.name===ds.k);if(!src||S.perms.some(p=>p.name===src.name))break;addPerm(src);break}
     case"popen":sheet={kind:"perm",id:ds.id};break;
     case"pleave":{const p=S.perms.find(x=>x.id===sheet?.id);if(!p)break;S.perms=S.perms.filter(x=>x!==p);for(const k in S.pdone)if(k.startsWith(p.id+":"))delete S.pdone[k];log(`${p.name} left the battlefield`);sheet=null;break}
     case"premdel":{const p=S.perms.find(x=>x.id===sheet?.id);if(!p)break;p.rem.splice(+ds.i,1);break}
     case"ptheirs":sheet={kind:"theirs"};break;
-    case"endturn":S.ph=null;S.nudge=null;for(const tk of S.tokens){tk.stacks.forEach(s=>{s.d=0;s.dt=false});merge(tk)}S.lastAtk=null;S.eP=0;S.eT=0;S.turn={e:0,d:0,s:0};log("End of turn: damage removed, pumps ended");break;
-    case"myturn":S.ph=null;S.nudge=null;for(const tk of S.tokens){tk.stacks.forEach(s=>{s.tapped=false;s.sick=false});merge(tk)}S.lastAtk=null;log("My turn: untapped all, summoning sickness gone");break;
+    case"endturn":endMyTurn();log("End of turn: damage removed, pumps ended");break;
+    case"myturn":S.ph=null;startMyTurn();log(`Turn ${S.turnNo}: untapped all, summoning sickness gone`);break;
     case"open":sheet={kind:"tok",id:ds.id,sel:0,amt:1,dmg:1,bp:0,bt:0,ec:0};break;
     case"sac1":{const st=t.stacks.find(x=>!x.tapped)||t.stacks[0];if(sac(t,st,1))logAdd("sac"+t.id,1,"Sacrificed",t.name);break}
     case"blkopen":sheet={kind:"blk"};break;
@@ -1306,8 +1484,8 @@ function act(ds,held){
     case"addsheet":sheet={kind:"add"};break;
     case"menu":sheet={kind:"menu"};break;
     case"feats":sheet={kind:"feat"};break;
-    case"feat":UI.f[ds.k]=!UI.f[ds.k];if(ds.k==="haste"&&!UI.f.haste&&S.haste){S.haste=false;log("New creatures enter with haste: off")}if(ds.k==="arr"&&!UI.f.arr)arranging=false;saveUI();applyMotion();break;
-    case"featreset":for(const f of FEAT)UI.f[f[1]]=f[4];saveUI();applyMotion();break;
+    case"feat":UI.f[ds.k]=!UI.f[ds.k];if(ds.k==="wake")wakeSync();if(ds.k==="haste"&&!UI.f.haste&&S.haste){S.haste=false;log("New creatures enter with haste: off")}if(ds.k==="arr"&&!UI.f.arr)arranging=false;saveUI();applyMotion();break;
+    case"featreset":for(const f of FEAT)UI.f[f[1]]=f[4];saveUI();applyMotion();wakeSync();break;
     case"decks":sheet={kind:"decks"};break;
     case"logsheet":sheet={kind:"log"};break;
     case"backup":sheet={kind:"backup",photos:true};break;
