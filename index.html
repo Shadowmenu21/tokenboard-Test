@@ -266,6 +266,10 @@ html.rm .diceres b{animation:none}
 #viewer .vtext{display:grid;gap:6px;background:var(--felt-2);border:1px solid var(--line);border-radius:12px;padding:14px;width:100%;color:var(--ink)}#viewer .vtext small{color:var(--muted)}
 #viewer .vhint{font-size:12px;color:rgba(255,255,255,.6)}
 html.rm #viewer{transition:none}
+.sfitem.pitem{grid-template-columns:58px minmax(0,1fr);align-items:start;-webkit-touch-callout:none;user-select:none}
+.pthumb{width:58px;aspect-ratio:63/88;border-radius:4px;background:var(--felt-3) center/cover no-repeat;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.pitem .sfmeta b{white-space:normal}.pitem .sfmeta b em{font-style:normal;font-weight:600;font-size:12px;color:var(--muted);margin-left:4px}
+.pitem .ptag{color:var(--brass);font-weight:600}
 .switch small{font-size:11.5px;color:var(--muted)}
 @media (max-width:380px){.mod.sw2{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){.switch .knob,.switch .knob::after{transition:none}}
@@ -761,8 +765,13 @@ function permSearch(q){
       if(r.status===404){PS.items=[];psShow('<div class="note">No cards match that.</div>');return}
       if(!r.ok)throw new Error(r.status);
       const j=await r.json();PS.items=(j.data||[]).slice(0,20);
-      psShow(PS.items.map((raw,i)=>{const c=permFrom(raw),tg=permTags(c);return `<button class="sfitem" data-a="ppick" data-i="${i}"><span class="sfmeta"><b>${esc(c.name)}</b><small>${esc(c.type)}</small>
-        <small class="sftext">${esc(tg||"No upkeep, draw, combat or end step triggers")}</small></span></button>`}).join("")+`<div class="note">${j.total_cards>20?`Showing 20 of ${j.total_cards}. `:""}Card data from Scryfall.</div>`);
+      psShow(PS.items.map((raw,i)=>{const c=permFrom(raw),tg=permTags(c),sm=(raw.image_uris||raw.card_faces?.[0]?.image_uris||{}).small||"";
+        const cost=(raw.mana_cost||raw.card_faces?.[0]?.mana_cost||"").replace(/[{}]/g,"");
+        return `<button class="sfitem pitem" data-a="ppick" data-i="${i}" data-view="sf" aria-label="Add ${esc(c.name)}. Hold to see the full card">
+        <span class="pthumb"${sm?` style="background-image:url('${esc(sm)}')"`:""}></span>
+        <span class="sfmeta"><b>${esc(c.name)}${cost?` <em>${esc(cost)}</em>`:""}</b><small>${esc(c.type)}</small>
+        <small class="sftext">${esc(c.text.split("\n")[0]||"No rules text")}</small>
+        <small class="ptag">${esc(tg||"No phase triggers")}</small></span></button>`}).join("")+`<div class="note">${j.total_cards>20?`Showing 20 of ${j.total_cards}. `:""}Tap a card to add it. Hold it to see the whole card first. Card data from Scryfall.</div>`);
     }catch(e){if(e.name==="AbortError")return;psShow('<div class="note">Couldn\'t reach Scryfall right now. Try again in a moment.</div>')}
   },450);
 }
@@ -1073,7 +1082,7 @@ async function runImport(){
 /* ---------- sheets ---------- */
 let pendingCT=null,pendingGH=false;let sheet=null,pendingDel=false,pendingReset=false,pendingDeck=null,pendingRestore=false,openKey=null,pendingImg=null;
 function padList(){const mine=new Set(S.perms.map(p=>p.name)),cd=S.deck&&D.find(x=>x.id===S.deck.id),fromD=cd?.perms||[];
-  return cd?(fromD.length?`<p class="sec">From ${esc(cd.name)}</p><div class="permlist">${fromD.map(p=>{const on=mine.has(p.name);return `<button class="permrow" data-a="pdeck" data-k="${esc(p.name)}" ${on?"disabled":""}><b>${esc(p.name)}</b><small>${on?"On the battlefield":esc(permTags(p)||"no phase triggers")}</small></button>`}).join("")}</div>`
+  return cd?(fromD.length?`<p class="sec">From ${esc(cd.name)}</p><div class="permlist">${fromD.map(p=>{const on=mine.has(p.name);return `<button class="permrow" data-a="pdeck" data-k="${esc(p.name)}" data-view="dperm" ${on?"disabled":""}><b>${esc(p.name)}</b><small>${on?"On the battlefield":esc(permTags(p)||"no phase triggers")}</small></button>`}).join("")}</div>`
       :`<div class="note">${esc(cd.name)} has no saved trigger cards. Import its decklist again from Deck presets to pick them up, or search below.</div>`):""}
 function renderSheet(){
   const L=document.getElementById("layer");
@@ -1611,13 +1620,14 @@ function viewerHide(){const v=document.getElementById("viewer");if(v){v.classLis
 document.addEventListener("keydown",e=>{if(e.key==="Escape")viewerHide()});
 async function viewPerm(p){
   const box=x=>`<div class="vtext"><b>${esc(p.name)}</b>${p.type?`<small>${esc(p.type)}</small>`:""}${p.text?`<div class="oracle">${esc(p.text)}</div>`:""}${x||""}</div>`;
-  if(p.img){viewerShow(`<img class="vimg" src="${esc(p.img.replace("/normal/","/large/"))}" alt="${esc(p.name)}" draggable="false">`);return}
+  const tg=permTags(p),info=`<div class="vinfo"><b>${esc(p.name)}</b><span>${esc(tg||"No phase triggers")}</span></div>`;
+  if(p.img){viewerShow(`<img class="vimg" src="${esc(p.img.replace("/normal/","/large/"))}" alt="${esc(p.name)}" draggable="false">${info}`);return}
   if(!navigator.onLine||!p.type){viewerShow(box(`<div class="note">${p.type?"Connect to the internet to load this card's picture.":"Added by name, so there's no card picture."}</div>`));return}
   viewerShow(box(`<div class="note">Loading the card picture…</div>`));
   try{const r=await fetch("https://api.scryfall.com/cards/named?exact="+encodeURIComponent(p.name),{headers:{Accept:"application/json"}});if(!r.ok)throw 0;
     const raw=await r.json(),img=(raw.image_uris||raw.card_faces?.[0]?.image_uris||{}).normal;if(!img)throw 0;
     p.img=img;for(const d of D)for(const q of d.perms||[])if(q.name===p.name&&!q.img)q.img=img;save();
-    if(!document.getElementById("viewer")?.hidden)viewerShow(`<img class="vimg" src="${esc(img.replace("/normal/","/large/"))}" alt="${esc(p.name)}" draggable="false">`)}
+    if(!document.getElementById("viewer")?.hidden)viewerShow(`<img class="vimg" src="${esc(img.replace("/normal/","/large/"))}" alt="${esc(p.name)}" draggable="false">${info}`)}
   catch(e){if(!document.getElementById("viewer")?.hidden)viewerShow(box(`<div class="note">Couldn't load the picture right now.</div>`))}}
 function viewTok(t){const n=cnt(t),big=fullImg(t,"large");
   const info=`<div class="vinfo"><b>${esc(t.name)} ×${n}</b>${t.creature?`<span>Now ${ptStr(t,0)}${bufP(t)||bufT(t)?` (printed ${t.p}/${t.t})`:""}</span>`:""}</div>`;
@@ -1625,10 +1635,12 @@ function viewTok(t){const n=cnt(t),big=fullImg(t,"large");
   viewerShow(`<div class="vcard">${cardHTML({...t,full:null,img:t.img}).replace('class="card','class="card big').replace(/data-a="open"/,'tabindex="-1"')}</div>${info}`)}
 let lpT=null,lpX=0,lpY=0;
 document.addEventListener("pointerdown",e=>{
-  const el=e.target.closest(".card[data-id],.permrow[data-view],.mini [data-a='open']");if(!el||el.closest("#viewer"))return;
+  const el=e.target.closest(".card[data-id],[data-view],.mini [data-a='open']");if(!el||el.closest("#viewer"))return;
   lpX=e.clientX;lpY=e.clientY;clearTimeout(lpT);
   lpT=setTimeout(()=>{lpT=null;swallow=true;el.classList.remove("pressing");
     if(el.dataset.view==="perm"){const p=S.perms.find(x=>x.id===el.dataset.id);if(p)viewPerm(p)}
+    else if(el.dataset.view==="sf"){const raw=PS.items[+el.dataset.i];if(raw)viewPerm(permFrom(raw))}
+    else if(el.dataset.view==="dperm"){const cd=S.deck&&D.find(x=>x.id===S.deck.id),p=(cd?.perms||[]).find(x=>x.name===el.dataset.k);if(p)viewPerm(p)}
     else{const t=S.tokens.find(x=>x.id===el.dataset.id);if(t)viewTok(t)}},450)});
 document.addEventListener("pointermove",e=>{if(lpT&&(Math.abs(e.clientX-lpX)>10||Math.abs(e.clientY-lpY)>10)){clearTimeout(lpT);lpT=null}},{passive:true});
 ["pointerup","pointercancel","scroll"].forEach(ev=>document.addEventListener(ev,()=>{if(lpT){clearTimeout(lpT);lpT=null}},true));
