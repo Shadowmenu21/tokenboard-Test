@@ -173,9 +173,9 @@ textarea{min-height:56px;resize:vertical}
 .switch.mini{flex:none;padding:5px 9px;gap:7px}.switch.mini b{font-size:13px}
 .arr select{flex:1 1 auto;width:0;text-overflow:ellipsis}.toolbar>.ghost{flex:none}
 .arr>.sec{display:none}.toolbar .sm{display:none}@media (max-width:440px){.toolbar .lg{display:none}.toolbar .sm{display:inline}}@media (max-width:400px){.toolbar>.ghost{padding-left:9px;padding-right:9px}.switch.mini{padding:5px 7px}}
-#lifefx{position:fixed;z-index:200;transform:translate(-50%,-100%);font:800 26px/1 system-ui,sans-serif;font-variant-numeric:tabular-nums;pointer-events:none;opacity:0;transition:opacity .35s,margin .35s;margin-top:0;text-shadow:0 2px 6px rgba(0,0,0,.45)}
-#lifefx.show{opacity:1;margin-top:-10px}#lifefx.up{color:var(--c-ready)}#lifefx.down{color:var(--danger)}
-#lifefx.pop{animation:fxpop .22s ease-out}@keyframes fxpop{from{scale:1.35}to{scale:1}}
+#lifefx{position:fixed;z-index:200;transform:translate(-50%,-100%);font:800 26px/1 system-ui,sans-serif;font-variant-numeric:tabular-nums;pointer-events:none;opacity:0;transition:opacity .25s;text-shadow:0 2px 6px rgba(0,0,0,.45)}
+#lifefx.show{opacity:1}#lifefx.up{color:var(--c-ready)}#lifefx.down{color:var(--danger)}
+#lifefx.pop{animation:lifepop .2s ease-out}@keyframes lifepop{from{scale:1.25}to{scale:1}}
 .cmdlist{display:grid;gap:8px}.cmdrow{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;background:var(--felt);border:1px solid var(--line);border-radius:10px;padding:6px 8px}
 .cmdrow input{min-width:0;background:none;border:0;border-bottom:1px dashed var(--line);border-radius:0;padding:4px 2px;font-weight:600}
 .cmdrow output{font-size:20px;min-width:2.2ch;text-align:center;font-variant-numeric:tabular-nums}
@@ -521,7 +521,7 @@ function lifeFx(d){if(!F("lifefx"))return;const now=Date.now();if(now-fxLast>150
   let el=document.getElementById("lifefx");if(!el){el=document.createElement("div");el.id="lifefx";el.setAttribute("aria-hidden","true");document.body.appendChild(el)}
   el.textContent=fxSum>0?"+"+fxSum:fxSum<0?"−"+(-fxSum):"±0";el.className=fxSum>0?"up":fxSum<0?"down":"";
   requestAnimationFrame(()=>{const tgt=document.querySelector(".sheet .lifebig")||document.querySelector(".lifetap");if(!tgt)return;const b=tgt.getBoundingClientRect();
-    el.style.left=(b.left+b.width/2)+"px";el.style.top=(b.top-6)+"px";el.classList.remove("pop");void el.offsetWidth;el.classList.add("show","pop")});
+    el.style.left=(b.left+b.width/2)+"px";el.style.top=(b.top-2)+"px";el.classList.remove("pop");void el.offsetWidth;el.classList.add("show","pop")});
   clearTimeout(fxTimer);fxTimer=setTimeout(()=>el.classList.remove("show"),1500)}
 
 /* counts from repeated quick taps add up into one line */
