@@ -1,6 +1,6 @@
 // Token Board offline support.
 // Bump VERSION whenever you upload a new index.html so phones pick up the update cleanly.
-const VERSION = "tokenboard-test-r10";
+const VERSION = "tokenboard-test-r11";
 const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png"];
 const RUNTIME = "tokenboard-test-runtime";
 
