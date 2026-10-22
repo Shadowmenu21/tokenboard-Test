@@ -276,6 +276,10 @@ html.rm #viewer{transition:none}
 .ver .vimgs{display:block;width:100%;aspect-ratio:63/88;border-radius:5px;background:var(--felt-3) center/cover no-repeat}
 .ver b{font-size:12px}.ver small{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ver em{position:absolute;top:8px;left:8px;font-style:normal;font-size:11px;font-weight:700;background:var(--brass);color:var(--brass-ink);border-radius:999px;padding:1px 7px}
+.mod.wide.ctrs{display:grid;justify-content:stretch;gap:8px}
+.ctrbtns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.ctrbtns .btn{height:40px;font-size:14px;padding:0 4px}
+.mod .cfrow{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);text-transform:none;letter-spacing:0}.mod .cfrow select{flex:1;min-width:0;padding:5px 8px}
+.pfrow{opacity:.6}.pfrow.on{opacity:1;border-color:var(--brass);box-shadow:inset 0 0 0 1px var(--brass)}
 .switch small{font-size:11.5px;color:var(--muted)}
 @media (max-width:380px){.mod.sw2{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){.switch .knob,.switch .knob::after{transition:none}}
@@ -556,7 +560,8 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(S));localStorage.set
 
 /* Undo: snapshots kept in memory for this session (photos are shared, not copied) */
 let hist=[];
-const clone=o=>({...o,turn:{...o.turn},lastAtk:o.lastAtk?JSON.parse(JSON.stringify(o.lastAtk)):null,log:o.log.map(e=>({...e})),tokens:o.tokens.map(t=>({...t,kw:{...t.kw},stacks:t.stacks.map(s=>({...s}))}))});
+/* undo snapshots: deep copy of every object and array; strings (like photos) are shared, not duplicated */
+const clone=o=>Array.isArray(o)?o.map(clone):o&&typeof o==="object"?Object.fromEntries(Object.entries(o).map(([k,v])=>[k,clone(v)])):o;
 function snap(){hist.push(clone(S));if(hist.length>60)hist.shift()}
 
 /* Game log; repeated changes of the same kind merge into one line */
@@ -893,6 +898,13 @@ async function loadVersions(t){VS.id=t.id;VS.items=[];VS.busy=true;VS.close=fals
     VS.busy=false;VS.msg=VS.items.length?`${VS.items.length} version${VS.items.length>1?"s":""}${VS.close?" of similar tokens (none matched this one exactly)":""}.`:"No Scryfall versions found for this token.";
   }catch(e){VS.busy=false;VS.msg=e.message==="offline"?"You're offline. Card versions need internet.":"Couldn't reach Scryfall right now. Try again in a moment."}
   if(sheet?.kind==="vers")render()}
+/* ---------- board-wide counters ---------- */
+const typeWords=()=>[...new Set(S.tokens.filter(t=>t.creature&&!t.emblem&&cnt(t)).flatMap(t=>t.name.split(/\s+/).filter(w=>/^[A-Z][a-z'-]+$/.test(w))))].sort();
+const cfMatch=t=>t.creature&&!t.emblem&&(!UI.cf||t.name.split(/\s+/).includes(UI.cf));
+function counterEach(v){let n=0;for(const t of S.tokens){if(!cfMatch(t))continue;for(const st of t.stacks)if(st.n>0){st.c+=v;n+=st.n}merge(t)}
+  log(`${v>0?"+1/+1":"−1/−1"} counter on each ${UI.cf||"creature"} token (${n})`);return n}
+function prolifRows(){const rows=[];
+  S.tokens.forEach(t=>{if(t.emblem)return;t.stacks.forEach((st,i)=>{if(st.n>0&&st.c)rows.push({key:t.id+":"+i,t,st,good:st.c>0})})});return rows}
 function buffSummary(){const p=[];
   if(S.aP||S.aT)p.push(`Anthem ${sgn(S.aP)}/${sgn(S.aT)}`);
   if(S.eP||S.eT)p.push(`This turn ${sgn(S.eP)}/${sgn(S.eT)}`);
@@ -926,6 +938,9 @@ function render(){
       <button class="switch" data-a="flag" data-k="defAtk" role="switch" aria-checked="${S.defAtk}"><span class="knob"></span><span><b>Defenders can attack</b><small>Felothar, Assault Formation…</small></span></button>
       <button class="switch" data-a="flag" data-k="tough" role="switch" aria-checked="${S.tough}"><span class="knob"></span><span><b>Damage = toughness</b><small>instead of power</small></span></button>
     </div>
+    <div class="mod wide ctrs"><label>Counters on everything</label>
+      <div class="ctrbtns"><button class="btn" data-a="ceach" data-v="1" ${S.tokens.some(t=>cfMatch(t)&&cnt(t))?"":"disabled"}>+1/+1 on each</button><button class="btn" data-a="ceach" data-v="-1" ${S.tokens.some(t=>cfMatch(t)&&cnt(t))?"":"disabled"}>−1/−1 on each</button><button class="btn" data-a="prolif" ${prolifRows().length||PCS.some(([k])=>S.pc[k])?"":"disabled"}>Proliferate…</button></div>
+      <label class="cfrow">Only <select id="cfilt" aria-label="Which creature tokens"><option value="">All creature tokens</option>${typeWords().map(w=>`<option value="${esc(w)}"${UI.cf===w?" selected":""}>${esc(w)}s</option>`).join("")}</select></label></div>
     <div class="mod wide"><label>Doublers</label><div class="step"><button data-a="dbl" data-v="-1" aria-label="Fewer doublers">−</button><output class="${S.dbl?"on":""}">×${mult()}</output><button data-a="dbl" data-v="1" aria-label="More doublers">+</button></div></div>
   </div>`:""}
   ${F("totals")?`<div class="sum">
@@ -1156,8 +1171,11 @@ function renderSheet(){
     ${!t.emblem?`<div class="copies"><span class="sec">Populate / copy</span><button class="ghost" data-a="copy" data-v="">Make a copy</button><button class="ghost" data-a="copy" data-v="tap">Copy, tapped</button></div>`:""}
     ${t.creature?sect("ctr","Counters & bonuses",sheet.ec?`new ones enter with ${sheet.ec}`:"",`
       ${st?`<div class="acts">
-        <button class="btn" data-a="op" data-op="plus">+1/+1 on ${sheet.amt}</button>
-        <button class="btn" data-a="op" data-op="minus">−1/−1 on ${sheet.amt}</button></div>
+        <button class="btn" data-a="op" data-op="plus">${(sheet.ce||1)>1?`${sheet.ce}× `:""}+1/+1 on ${sheet.amt}</button>
+        <button class="btn" data-a="op" data-op="minus">${(sheet.ce||1)>1?`${sheet.ce}× `:""}−1/−1 on ${sheet.amt}</button></div>
+      <div class="amt"><span class="sec">Counters each</span>
+        <div class="step"><button data-a="ceamt" data-v="-1" data-rep aria-label="Fewer counters each" ${(sheet.ce||1)>1?"":"disabled"}>−</button><output class="${(sheet.ce||1)>1?"on":""}">${sheet.ce||1}</output><button data-a="ceamt" data-v="1" data-rep aria-label="More counters each">+</button></div>
+        <span class="note">Amount above is how many tokens</span></div>
       <div class="bonusrow"><span class="sec">Other bonus each · equipment, +1/+0 counters</span>
         <div class="pr"><i>P</i><div class="step"><button data-a="bon" data-k="bp" data-v="-1" data-rep aria-label="Lower power bonus">−</button><output class="${sheet.bp?"on":""}">${sgn(sheet.bp)}</output><button data-a="bon" data-k="bp" data-v="1" data-rep aria-label="Raise power bonus">+</button></div></div>
         <div class="pr"><i>T</i><div class="step"><button data-a="bon" data-k="bt" data-v="-1" data-rep aria-label="Lower toughness bonus">−</button><output class="${sheet.bt?"on":""}">${sgn(sheet.bt)}</output><button data-a="bon" data-k="bt" data-v="1" data-rep aria-label="Raise toughness bonus">+</button></div></div>
@@ -1239,6 +1257,15 @@ function renderSheet(){
       <div class="step"><button data-a="cmd" data-i="${i}" data-v="-1" data-rep aria-label="Less commander damage from ${esc(nm)}" ${S.cmd[i]?"":"disabled"}>−</button><output>${S.cmd[i]}</output><button data-a="cmd" data-i="${i}" data-v="1" data-rep aria-label="More commander damage from ${esc(nm)}">+</button></div>
       ${S.cmd[i]>=21?`<small>21+ combat damage from one commander: you lose</small>`:""}</div>`).join("")}</div>
     <div class="note">Tap + for each point of combat damage an opponent's commander deals you; your life drops with it. − undoes a mistake and gives the life back. Tap a name to rename it.</div>`:""}`;
+  } else if(sheet.kind==="prolif"){
+    const rows=prolifRows(),pcr=PCS.filter(([k])=>S.pc[k]);const on=rows.filter(r=>sheet.pick[r.key]).reduce((a,r)=>a+r.st.n,0);
+    body=head("Proliferate",done)+`
+    <div class="note">Each one you pick gets one more counter of the kind it already has (rule 701.34a). Groups of yours with −1/−1 counters start unchecked.</div>
+    ${rows.length?`<div class="permlist">${rows.map(r=>`<button class="permrow pfrow${sheet.pick[r.key]?" on":""}" data-a="pftog" data-k="${r.key}" role="checkbox" aria-checked="${!!sheet.pick[r.key]}">
+      <b>${sheet.pick[r.key]?"✓ ":""}${esc(r.t.name)} ×${r.st.n}</b><small>${r.good?`${r.st.c} +1/+1 → ${r.st.c+1}`:`${-r.st.c} −1/−1 → ${-r.st.c+1}`} · now ${ptStr(r.t,r.st.c)}${r.st.tapped?" · tapped":""}</small></button>`).join("")}</div>`:`<div class="note">No tokens have counters.</div>`}
+    ${pcr.length?`<p class="sec">Your player counters</p><div class="permlist">${pcr.map(([k,l])=>`<button class="permrow pfrow${sheet.pick["pc:"+k]?" on":""}" data-a="pftog" data-k="pc:${k}" role="checkbox" aria-checked="${!!sheet.pick["pc:"+k]}"><b>${sheet.pick["pc:"+k]?"✓ ":""}${l}</b><small>${S.pc[k]} → ${S.pc[k]+1}</small></button>`).join("")}</div>`:""}
+    <button class="btn pri" data-a="pfgo">Proliferate${on?` (${plural(on,on>1?"tokens":"token")})`:""}</button>
+    <div class="note">Only tokens and your player counters are tracked here. Your other permanents and opponents' counters are up to you.</div>`;
   } else if(sheet.kind==="vers"){
     const t=S.tokens.find(x=>x.id===sheet.id);if(!t){sheet=null;L.innerHTML="";openKey=null;return}
     body=head(`${esc(t.name)} versions`,`<button class="ghost" data-a="verback">Back</button>${done}`)+`
@@ -1437,16 +1464,16 @@ function applyOp(t,op){
   let tgt=null;
   if(op!=="remove"){tgt={...s,n};
     if(op==="tap")tgt.tapped=true;if(op==="untap")tgt.tapped=false;
-    if(op==="bonus"){tgt.mp=(tgt.mp||0)+sheet.bp;tgt.mt=(tgt.mt||0)+sheet.bt}if(op==="plus")tgt.c+=1;if(op==="minus")tgt.c-=1;if(op==="dmg"){tgt.d=(tgt.d||0)+sheet.dmg;if(sheet.dt)tgt.dt=true}
+    if(op==="bonus"){tgt.mp=(tgt.mp||0)+sheet.bp;tgt.mt=(tgt.mt||0)+sheet.bt}if(op==="plus")tgt.c+=(sheet.ce||1);if(op==="minus")tgt.c-=(sheet.ce||1);if(op==="dmg"){tgt.d=(tgt.d||0)+sheet.dmg;if(sheet.dt)tgt.dt=true}
     t.stacks.push(tgt);}
   merge(t);
   sheet.sel=tgt?Math.max(0,t.stacks.findIndex(x=>skey(x)===skey(tgt))):0;
   sheet.amt=1;S.example=false;
-  log({tap:`Tapped ${n} ${t.name}`,untap:`Untapped ${n} ${t.name}`,plus:`+1/+1 counter on ${n} ${t.name}`,bonus:`${sgn(sheet.bp)}/${sgn(sheet.bt)} bonus on ${n} ${t.name}`,minus:`−1/−1 counter on ${n} ${t.name}`,dmg:`${sheet.dmg}${sheet.dt?" deathtouch":""} damage to ${n} ${t.name}`,remove:`Removed ${n} ${t.name} (exiled, bounced or other)`}[op]);
+  log({tap:`Tapped ${n} ${t.name}`,untap:`Untapped ${n} ${t.name}`,plus:`${(sheet.ce||1)>1?sheet.ce+" ":""}+1/+1 counter${(sheet.ce||1)>1?"s":""} on ${n} ${t.name}`,bonus:`${sgn(sheet.bp)}/${sgn(sheet.bt)} bonus on ${n} ${t.name}`,minus:`${(sheet.ce||1)>1?sheet.ce+" ":""}−1/−1 counter${(sheet.ce||1)>1?"s":""} on ${n} ${t.name}`,dmg:`${sheet.dmg}${sheet.dt?" deathtouch":""} damage to ${n} ${t.name}`,remove:`Removed ${n} ${t.name} (exiled, bounced or other)`}[op]);
 }
 
 /* actions that only change what's on screen, not the board */
-const VIEW=new Set(["versopen","verback","dice","roll","games","game","gclear","share","shnative","shcopy","recvadd","padd","popen","ptheirs","tenew","teedit","telight","teframe","tecancel","tesave","tedel","feats","feat","featreset","wipesheet","impopen","impgo","imptog","impall","impnone","lifesheet","grp","buffs","sect","arrange","open","addsheet","close","sel","amt","amtAll","undo","atkopen","atkset","atkmax","atkall","atknone","edit","editback","menu","decks","logsheet","backup","bkcopy","bksave","bkphotos","deckdel","colors","theme","accent","accentreset","dmgamt","dttog","blkopen","bon","ecamt","install"]);
+const VIEW=new Set(["pftog","versopen","verback","dice","roll","games","game","gclear","share","shnative","shcopy","recvadd","padd","popen","ptheirs","tenew","teedit","telight","teframe","tecancel","tesave","tedel","feats","feat","featreset","wipesheet","impopen","impgo","imptog","impall","impnone","lifesheet","grp","buffs","sect","arrange","open","addsheet","close","sel","amt","amtAll","undo","atkopen","atkset","atkmax","atkall","atknone","edit","editback","menu","decks","logsheet","backup","bkcopy","bksave","bkphotos","deckdel","colors","theme","accent","accentreset","dmgamt","dttog","blkopen","bon","ecamt","install"]);
 function act(ds,held){
   const a=ds.a,t=S.tokens.find(x=>x.id===ds.id);
   if(!held&&!VIEW.has(a)&&!(a==="reset"&&!pendingReset)&&!(a==="deltype"&&!pendingDel)&&!(a==="bkrestore"&&!pendingRestore))snap();
@@ -1533,6 +1560,14 @@ function act(ds,held){
     case"blkbt":{const A=S.lastAtk,i=+ds.i;A.bt??={};A.bt[i]=Math.max(0,Math.min(50,(A.bt[i]??1)+ +ds.v));log(`${blockedN(A)} blocked · ${atkDamage(A)} damage gets through`,"blk");break}
     case"blkx":{const A=S.lastAtk;A.x=Math.max(-99,Math.min(99,(A.x||0)+ +ds.v));log(`${blockedN(A)} blocked · ${atkDamage(A)} damage gets through`,"blk");break}
     case"bon":sheet[ds.k]=Math.max(-20,Math.min(20,(sheet[ds.k]||0)+ +ds.v));break;
+    case"ceach":counterEach(+ds.v);break;
+    case"prolif":{const pick={};prolifRows().forEach(r=>pick[r.key]=r.good);PCS.forEach(([k])=>{if(S.pc[k])pick["pc:"+k]=k==="energy"||k==="exp"});sheet={kind:"prolif",pick};break}
+    case"pftog":sheet.pick[ds.k]=!sheet.pick[ds.k];break;
+    case"pfgo":{const rows=prolifRows().filter(r=>sheet.pick[r.key]);let n=0;const pcs=[];
+      for(const r of rows){r.st.c+=r.st.c>0?1:-1;n+=r.st.n}
+      for(const [k,l] of PCS)if(S.pc[k]&&sheet.pick["pc:"+k]){S.pc[k]++;pcs.push(l.toLowerCase())}
+      S.tokens.forEach(merge);log(`Proliferate: ${n?plural(n,n>1?"tokens":"token"):"no tokens"}${pcs.length?" · "+pcs.join(", "):""}`);sheet=null;break}
+    case"ceamt":sheet.ce=Math.max(1,Math.min(20,(sheet.ce||1)+ +ds.v));break;
     case"ecamt":sheet.ec=Math.max(0,Math.min(20,(sheet.ec||0)+ +ds.v));break;
     case"install":if(installEvt){installEvt.prompt();installEvt.userChoice.finally(()=>{installEvt=null;render()})}break;
     case"sfpick":{const c=SF.items[+ds.i];if(!c)break;const tk={...fromScryfall(c),id:nid(),stacks:[]};S.tokens.push(tk);S.example=false;
@@ -1767,6 +1802,7 @@ document.addEventListener("change",e=>{
   const km=el.id.match(/^(cf|ef)-(emb|cre|art|ench)$/);
   if(km&&el.checked){const f=km[1];if(km[2]==="emb")["cre","art","ench"].forEach(k=>{document.getElementById(f+"-"+k).checked=false});else document.getElementById(f+"-emb").checked=false;return}
   const on=el.id.match(/^opn-(\d)$/);if(on){const v=el.value.trim().slice(0,18);if(v&&v!==S.opp[+on[1]]){snap();S.opp[+on[1]]=v;render()}return}
+  if(el.id==="cfilt"){UI.cf=el.value||"";saveUI();render();return}
   if(el.id==="arr"){UI.arr=el.value;saveUI();if(UI.arr==="name")arranging=false;render();return}
   if(el.id==="frame-pick"){const tk=S.tokens.find(x=>x.id===sheet?.id);if(tk){snap();tk.frame=el.value;render()}return}
   if(el.id==="acc-pick"){render();return}
